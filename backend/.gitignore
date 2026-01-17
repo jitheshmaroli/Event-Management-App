@@ -1,0 +1,9 @@
+node_modules/
+logs/
+dist/
+build/
+.env
+.vscode/
+backend/.env
+backend/uploads/
+client/.env
