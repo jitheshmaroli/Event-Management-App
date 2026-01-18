@@ -11,6 +11,7 @@ import {
   resetPasswordSchema,
   verifyOtpSchema,
 } from '@/validations/auth.validation';
+import { authenticate } from '@/middlewares/auth.middleware';
 
 const router = Router();
 const authController = container.get<AuthController>(TYPES.AuthController);
@@ -45,5 +46,10 @@ router.post(
   validateRequest(resetPasswordSchema, 'body'),
   authController.resetPassword.bind(authController)
 );
-
+router.post('/refresh', authController.refresh.bind(authController));
+router.post(
+  '/logout',
+  authenticate,
+  authController.logout.bind(authController)
+);
 export default router;

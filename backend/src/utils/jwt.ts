@@ -1,13 +1,14 @@
 import { env } from '@/config/env.config';
+import { Role } from '@/constants/roles';
 import jwt from 'jsonwebtoken';
 
-interface AccessPayload {
+export interface AccessPayload {
   userId: string;
   email: string;
-  role: string;
+  role: Role;
 }
 
-interface RefreshPayload {
+export interface RefreshPayload {
   userId: string;
 }
 

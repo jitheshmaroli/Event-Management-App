@@ -1,7 +1,8 @@
 import { HTTP_STATUS } from '@/constants/httpStatusCode';
-import { MESSAGES } from '@/constants/messages';
+import { ERROR_CODES, MESSAGES } from '@/constants/messages';
 import { AppError } from '@/utils/errors';
 import logger from '@/utils/logger';
+import { errorResponse } from '@/utils/response';
 import { Request, Response, NextFunction } from 'express';
 
 export const errorHandler = (
@@ -12,22 +13,15 @@ export const errorHandler = (
   _next: NextFunction
 ) => {
   if (err instanceof AppError) {
-    return res.status(err.statusCode).json({
-      success: false,
-      message: err.message,
-      error: {
-        code: err.code ?? 'APPLICATION_ERROR',
-      },
-    });
+    return errorResponse(res, err.statusCode, err.message, err.code);
   }
 
   logger.error('Unhandled Error:', err);
 
-  return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
-    success: false,
-    message: MESSAGES.HTTP.INTERNAL_SERVER_ERROR,
-    error: {
-      code: 'INTERNAL_SERVER_ERROR',
-    },
-  });
+  return errorResponse(
+    res,
+    HTTP_STATUS.INTERNAL_SERVER_ERROR,
+    MESSAGES.HTTP.INTERNAL_SERVER_ERROR,
+    ERROR_CODES.INTERNAL_SERVER_ERROR
+  );
 };

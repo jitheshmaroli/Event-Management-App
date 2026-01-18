@@ -7,10 +7,14 @@ export interface IAuthService {
   resendOtp(email: string, purpose: OtpPurpose): Promise<{ message: string }>;
   verifyOTP(email: string, otp: string): Promise<LoginResponse>;
   login(credentials: LoginInput): Promise<LoginResponse>;
+  logout(userId: string): Promise<{ message: string }>;
   forgotPassword(email: string): Promise<{ message: string }>;
   resetPassword(
     email: string,
     otp: string,
     newPassword: string
   ): Promise<{ message: string }>;
+  refreshToken(
+    refreshToken: string
+  ): Promise<{ accessToken: string; refreshToken: string }>;
 }

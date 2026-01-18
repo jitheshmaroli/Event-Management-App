@@ -11,7 +11,7 @@ export class UserRepository implements IUserRepository {
   }
 
   async findById(id: string): Promise<IUser | null> {
-    return User.findById(id);
+    return User.findById(id).select('+refreshToken');
   }
 
   async create(userData: Partial<IUser>): Promise<IUser> {

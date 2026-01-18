@@ -11,7 +11,7 @@ export interface IUser extends Document {
   otp?: string;
   otpCreatedAt?: Date;
   otpPurpose?: OtpPurpose;
-  refreshToken?: string;
+  refreshToken: string;
   createdAt: Date;
   updatedAt: Date;
 }

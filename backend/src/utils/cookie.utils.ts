@@ -6,14 +6,14 @@ export const setAuthCookies = (
   accessToken: string,
   refreshToken: string
 ) => {
-  res.cookie('access_token', accessToken, {
+  res.cookie('accessToken', accessToken, {
     httpOnly: true,
     secure: env.NODE_ENV === 'production',
     sameSite: 'strict',
     maxAge: 15 * 60 * 1000,
   });
 
-  res.cookie('refresh_token', refreshToken, {
+  res.cookie('refreshToken', refreshToken, {
     httpOnly: true,
     secure: env.NODE_ENV === 'production',
     sameSite: 'strict',
