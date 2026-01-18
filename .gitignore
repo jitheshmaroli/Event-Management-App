@@ -1,0 +1,89 @@
+########################################
+# Global (Root Level)
+########################################
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+
+########################################
+# Environment Variables (CRITICAL)
+########################################
+
+.env
+.env.*
+!.env.example
+
+########################################
+# Node / Package Managers (Global)
+########################################
+
+node_modules/
+
+########################################
+# Build Outputs (Frontend + Backend)
+########################################
+
+dist/
+build/
+out/
+
+########################################
+# Coverage / Reports
+########################################
+
+coverage/
+.nyc_output/
+
+########################################
+# Cache / Temp
+########################################
+
+.cache/
+.tmp/
+temp/
+
+########################################
+# Backend Specific
+########################################
+
+backend/node_modules/
+backend/dist/
+backend/build/
+backend/logs/
+backend/coverage/
+
+########################################
+# Frontend Specific (Vite + React)
+########################################
+
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+frontend/.vite/
+
+########################################
+# Test Artifacts
+########################################
+
+*.lcov
+*.coverage
+
+########################################
+# Misc
+########################################
+
+*.tgz
+*.tar.gz
