@@ -2,6 +2,7 @@ export const MESSAGES = {
   USER: {
     CREATED: 'User registered successfully. Please verify your email.',
     VERIFIED: 'Email verified successfully',
+    FETCHED: 'User profile fetched successfully',
     ALREADY_EXISTS: 'User with this email already exists',
     NOT_FOUND: 'User not found',
     INVALID_CREDENTIALS: 'Invalid email or password',
@@ -14,6 +15,7 @@ export const MESSAGES = {
     INVALID: 'Invalid OTP. Please check and try again.',
     EXPIRED: 'OTP has expired. Please request a new one.',
     SENT: 'OTP sent to your email',
+    VERIFIED: 'OTP verified successfully',
   },
   AUTH: {
     LOGIN_SUCCESS: 'Logged in successfully',
