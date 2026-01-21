@@ -1,7 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useAuth } from "@/context/AuthContext";
 import {
   CheckCircle,
   ArrowLeft,
@@ -10,135 +8,182 @@ import {
   Sparkles,
   Calendar,
 } from "lucide-react";
+
 import type { VerifyEmailState } from "@/lib/types";
 import { OTP_PURPOSE } from "@/constants/otpPurpose";
-import { sendOtp } from "@/lib/auth";
+import { clearError } from "@/features/auth/authSlice";
+import { useAppSelector } from "@/hooks/useAppSelector";
+import { useAppDispatch } from "@/hooks/useAppDispatch";
+import { sendOtpThunk, verifyOtpThunk } from "@/features/auth/authThunk";
 
 export default function VerifyOtp() {
   const [otp, setOtp] = useState<string[]>(Array(6).fill(""));
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [localError, setLocalError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [resendCountdown, setResendCountdown] = useState(60);
 
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
-  const { verifyOtp, user } = useAuth();
-  const navigate = useNavigate();
+
   const location = useLocation();
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+
+  const { isLoading, error: reduxError } = useAppSelector(
+    (state) => state.auth,
+  );
 
   const state = location.state as VerifyEmailState | null;
 
-  const emailFromState = state?.email || user?.email || "";
+  const email = state?.email ?? "";
   const otpPurpose = state?.purpose;
 
-  console.log("emailstate:", emailFromState);
-  console.log("purpose:", otpPurpose);
-
+  // Redirect if no email
   useEffect(() => {
-    if (!emailFromState) {
+    if (!email) {
       navigate("/register", { replace: true });
     }
-  }, [emailFromState, otpPurpose, navigate]);
+  }, [email, navigate]);
 
+  // Clear error on mount
   useEffect(() => {
-    if (resendCountdown > 0) {
-      const timer = setTimeout(() => setResendCountdown((c) => c - 1), 1000);
-      return () => clearTimeout(timer);
-    }
+    dispatch(clearError());
+  }, [dispatch]);
+
+  // Countdown for resend
+  useEffect(() => {
+    if (resendCountdown <= 0) return;
+    const timer = setTimeout(() => setResendCountdown((c) => c - 1), 1000);
+    return () => clearTimeout(timer);
   }, [resendCountdown]);
 
-  const handleChange = (index: number, value: string) => {
+  const handleChange = useCallback((index: number, value: string) => {
     if (!/^[0-9]?$/.test(value)) return;
-    const newOtp = [...otp];
-    newOtp[index] = value;
-    setOtp(newOtp);
-
+    setOtp((prev) => {
+      const newOtp = [...prev];
+      newOtp[index] = value;
+      return newOtp;
+    });
     if (value && index < 5) {
       inputRefs.current[index + 1]?.focus();
     }
-  };
+  }, []);
 
-  const handleKeyDown = (
-    index: number,
-    e: React.KeyboardEvent<HTMLInputElement>,
-  ) => {
-    if (e.key === "Backspace" && !otp[index] && index > 0) {
-      inputRefs.current[index - 1]?.focus();
-    }
-  };
+  const handleKeyDown = useCallback(
+    (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Backspace" && !otp[index] && index > 0) {
+        inputRefs.current[index - 1]?.focus();
+      }
+    },
+    [otp],
+  );
 
-  const handlePaste = (
-    e: React.ClipboardEvent<HTMLInputElement>,
-    index: number,
-  ) => {
-    e.preventDefault();
-    const pasted = e.clipboardData.getData("text").trim();
-    if (!/^\d{6}$/.test(pasted)) return;
+  const handlePaste = useCallback(
+    (e: React.ClipboardEvent<HTMLInputElement>, index: number) => {
+      e.preventDefault();
+      const pasted = e.clipboardData.getData("text").trim();
+      if (!/^\d{6}$/.test(pasted)) return;
 
-    const digits = pasted.split("");
-    const newOtp = [...otp];
-    for (let i = 0; i < 6 && index + i < 6; i++) {
-      newOtp[index + i] = digits[i];
-    }
-    setOtp(newOtp);
+      const digits = pasted.split("");
+      setOtp((prev) => {
+        const newOtp = [...prev];
+        for (let i = 0; i < 6 && index + i < 6; i++) {
+          newOtp[index + i] = digits[i];
+        }
+        return newOtp;
+      });
 
-    const nextFocus = Math.min(index + digits.length, 5);
-    inputRefs.current[nextFocus]?.focus();
-  };
+      const nextFocus = Math.min(index + digits.length, 5);
+      inputRefs.current[nextFocus]?.focus();
+    },
+    [],
+  );
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const code = otp.join("");
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
 
-    if (code.length !== 6) {
-      setError("Please enter a complete 6-digit code");
+      const code = otp.join("");
+
+      if (code.length !== 6) {
+        setLocalError("Please enter a complete 6-digit code");
+        return;
+      }
+
+      if (!otpPurpose) {
+        setLocalError("Invalid verification context. Please try again.");
+        return;
+      }
+
+      setLocalError(null);
+
+      console.log("Submitting OTP for purpose:", otpPurpose);
+
+      const result = await dispatch(
+        verifyOtpThunk({
+          email,
+          otp: code,
+          purpose: otpPurpose,
+        }),
+      );
+
+      console.log("verifyOtpThunk result:", result);
+
+      if (verifyOtpThunk.fulfilled.match(result)) {
+        const payload = result.payload;
+
+        setSuccess(true);
+
+        if (otpPurpose === OTP_PURPOSE.SIGNUP) {
+          console.log("Signup verified → redirecting to dashboard");
+          setSuccessMessage("Email verified! Redirecting to dashboard...");
+          setTimeout(() => navigate("/dashboard", { replace: true }), 1500);
+        } else if (otpPurpose === OTP_PURPOSE.FORGOT_PASSWORD) {
+          console.log(
+            "Forgot password verified → redirecting to reset password",
+          );
+
+          const message =
+            payload.purpose === OTP_PURPOSE.FORGOT_PASSWORD
+              ? payload.message
+              : "OTP verified!";
+          setSuccessMessage(message);
+          setTimeout(() => {
+            navigate("/reset-password", { replace: true, state: { email } });
+          }, 1500);
+        }
+      } else if (verifyOtpThunk.rejected.match(result)) {
+        console.log("OTP verification failed:", result.payload);
+        setLocalError(result.payload as string);
+      }
+    },
+    [otp, otpPurpose, email, dispatch, navigate],
+  );
+
+  const handleResend = useCallback(async () => {
+    setLocalError(null);
+    setOtp(Array(6).fill(""));
+    inputRefs.current[0]?.focus?.();
+    setResendCountdown(60);
+
+    if (!otpPurpose || !email) {
+      setLocalError("Cannot resend OTP — invalid context");
       return;
     }
 
-    setError(null);
-    setLoading(true);
+    const result = await dispatch(
+      sendOtpThunk({
+        email,
+        purpose: otpPurpose,
+      }),
+    );
 
-    try {
-      switch (otpPurpose) {
-        case OTP_PURPOSE.SIGNUP:
-          await verifyOtp(emailFromState, code);
-          break;
-
-        case OTP_PURPOSE.FORGOT_PASSWORD:
-          await verifyOtp(emailFromState, code);
-          navigate("/reset-password", { state: { email: emailFromState } });
-          return;
-
-        default:
-          throw new Error("Invalid OTP purpose");
-      }
-
-      setSuccess(true);
-      setTimeout(() => navigate("/dashboard"), 1500);
-    } catch (err: any) {
-      setError(
-        err.response?.data?.message ||
-          "Invalid or expired code. Please try again.",
-      );
-    } finally {
-      setLoading(false);
+    if (sendOtpThunk.rejected.match(result)) {
+      setLocalError(result.payload as string);
     }
-  };
+  }, [otpPurpose, email, dispatch]);
 
-  const handleResend = async () => {
-    setError(null);
-    setOtp(Array(6).fill(""));
-    inputRefs.current[0]?.focus();
-    setResendCountdown(60);
-    try {
-      await sendOtp({ email: emailFromState, purpose: otpPurpose! });
-    } catch (err: any) {
-      setError(
-        err.response?.data?.message ||
-          "Failed to resend OTP. Please try again.",
-      );
-    }
-  };
+  const combinedError = localError || reduxError;
 
   return (
     <div className="min-h-screen flex relative overflow-hidden">
@@ -151,10 +196,8 @@ export default function VerifyOtp() {
         </div>
       </div>
 
-      {/* Mobile Logo + Form Container */}
       <div className="w-full lg:w-1/2 relative z-10 flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-md">
-          {/* Glassmorphic Card */}
           <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl p-8 border border-white/20">
             {/* Mobile Logo */}
             <div className="lg:hidden flex items-center justify-center gap-2 mb-8">
@@ -176,7 +219,7 @@ export default function VerifyOtp() {
               <p className="text-gray-600">
                 We sent a 6-digit code to{" "}
                 <span className="font-medium text-indigo-600 break-all">
-                  {emailFromState || "your email"}
+                  {email || "your email"}
                 </span>
               </p>
             </div>
@@ -189,14 +232,23 @@ export default function VerifyOtp() {
                 <h3 className="text-2xl font-bold text-gray-900 mb-3">
                   Email Verified!
                 </h3>
-                <p className="text-gray-600">Redirecting to dashboard...</p>
+                {successMessage && (
+                  <p className="text-green-600 font-medium mt-2">
+                    {successMessage}
+                  </p>
+                )}
+                <p className="text-gray-600 mt-4">
+                  {otpPurpose === OTP_PURPOSE.SIGNUP
+                    ? "Redirecting to dashboard..."
+                    : "Redirecting to reset password..."}
+                </p>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-8">
-                {error && (
+                {combinedError && (
                   <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm">
                     <AlertCircle size={20} className="flex-shrink-0" />
-                    <span>{error}</span>
+                    <span>{combinedError}</span>
                   </div>
                 )}
 
@@ -218,11 +270,7 @@ export default function VerifyOtp() {
                         w-14 h-16 text-center text-3xl font-bold border-2 rounded-xl
                         focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500
                         transition-all duration-200
-                        ${
-                          digit
-                            ? "border-indigo-600 bg-indigo-50/50"
-                            : "border-gray-300 hover:border-gray-400"
-                        }
+                        ${digit ? "border-indigo-600 bg-indigo-50/50" : "border-gray-300 hover:border-gray-400"}
                       `}
                       autoFocus={index === 0}
                     />
@@ -241,6 +289,7 @@ export default function VerifyOtp() {
                       <button
                         type="button"
                         onClick={handleResend}
+                        disabled={isLoading}
                         className="text-indigo-600 hover:text-indigo-800 font-medium transition-colors">
                         Resend Code
                       </button>
@@ -251,7 +300,7 @@ export default function VerifyOtp() {
                 {/* Submit Button */}
                 <button
                   type="submit"
-                  disabled={loading || success}
+                  disabled={isLoading || success}
                   className={`
                     w-full bg-gradient-to-r from-indigo-600 to-purple-600 
                     text-white py-3.5 px-6 rounded-xl font-medium
@@ -261,7 +310,7 @@ export default function VerifyOtp() {
                     transition-all transform hover:scale-[1.02] active:scale-[0.98]
                     flex items-center justify-center gap-3
                   `}>
-                  {loading ? (
+                  {isLoading ? (
                     <>
                       <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                       Verifying...
@@ -287,7 +336,6 @@ export default function VerifyOtp() {
             </div>
           </div>
 
-          {/* Footer */}
           <p className="mt-8 text-center text-sm text-white/80">
             © 2026 EventHub. All rights reserved.
           </p>

@@ -1,44 +1,41 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Mail, ArrowLeft, Calendar } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "@/context/AuthContext";
 import { OTP_PURPOSE } from "@/constants/otpPurpose";
+import { useAppDispatch } from "@/hooks/useAppDispatch";
+import { clearError } from "@/features/auth/authSlice";
+import { useAppSelector } from "@/hooks/useAppSelector";
+import { sendOtpThunk } from "@/features/auth/authThunk";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
-  const [message, setMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  // const [message, setMessage] = useState<string | null>(null);
+  const dispatch = useAppDispatch();
+  const { isLoading, error } = useAppSelector((state) => state.auth);
   const navigate = useNavigate();
-  const { sendOtp } = useAuth();
+
+  useEffect(() => {
+    dispatch(clearError());
+  }, [dispatch]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    setMessage(null);
-    setLoading(true);
 
-    try {
-      await sendOtp({ email, purpose: OTP_PURPOSE.FORGOT_PASSWORD });
+    const result = await dispatch(
+      sendOtpThunk({
+        email,
+        purpose: OTP_PURPOSE.FORGOT_PASSWORD,
+      }),
+    );
 
+    console.log(result);
+
+    if (sendOtpThunk.fulfilled.match(result)) {
       navigate("/verify-otp", {
-        state: {
-          email,
-          purpose: OTP_PURPOSE.FORGOT_PASSWORD,
-        },
+        state: { email, purpose: OTP_PURPOSE.FORGOT_PASSWORD },
       });
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      setError(
-        err.response?.data?.message ||
-          "Something went wrong. Please try again.",
-      );
-    } finally {
-      setLoading(false);
     }
   };
-
   return (
     <div className="min-h-screen flex relative overflow-hidden">
       {/* Animated Background */}
@@ -73,11 +70,11 @@ export default function ForgotPassword() {
               </p>
             </div>
 
-            {message && (
+            {/* {message && (
               <div className="mb-6 p-4 bg-green-50 border border-green-200 text-green-700 rounded-xl text-sm">
                 {message}
               </div>
-            )}
+            )} */}
 
             {error && (
               <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm">
@@ -101,16 +98,19 @@ export default function ForgotPassword() {
                     className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none"
                     placeholder="you@example.com"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (error) dispatch(clearError());
+                    }}
                   />
                 </div>
               </div>
 
               <button
                 type="submit"
-                disabled={loading}
+                disabled={isLoading}
                 className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3.5 px-6 rounded-xl font-medium hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-60 transition-all transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3">
-                {loading ? (
+                {isLoading ? (
                   <>
                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     Sending...

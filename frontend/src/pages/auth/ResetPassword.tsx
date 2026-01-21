@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
 import { Eye, EyeOff, Lock, Calendar } from "lucide-react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
-import { useAuth } from "@/context/AuthContext";
-
-type ResetPasswordState = {
-  email: string;
-};
+import { useAppDispatch } from "@/hooks/useAppDispatch";
+import { resetPasswordThunk } from "@/features/auth/authThunk.ts";
+import { useAppSelector } from "@/hooks/useAppSelector";
+import type { ResetPasswordState } from "@/lib/types";
 
 export default function ResetPassword() {
   const navigate = useNavigate();
@@ -16,10 +15,11 @@ export default function ResetPassword() {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [localError, setLocalError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const { resetPassword } = useAuth();
+
+  const dispatch = useAppDispatch();
+  const { isLoading, error } = useAppSelector((state) => state.auth);
 
   const state = location.state as ResetPasswordState | null;
   const email = state?.email;
@@ -28,36 +28,31 @@ export default function ResetPassword() {
     if (!email) {
       navigate("/forgot-password", { replace: true });
     }
-  }, [email, navigate]);
+  }, [email, navigate, dispatch]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
+    setLocalError(null);
 
     if (form.password.length < 8) {
-      setError("Password must be at least 8 characters");
+      setLocalError("Password must be at least 8 characters");
       return;
     }
     if (form.password !== form.confirmPassword) {
-      setError("Passwords do not match");
+      setLocalError("Passwords do not match");
       return;
     }
 
-    setLoading(true);
+    const result = await dispatch(
+      resetPasswordThunk({
+        email: email!,
+        newPassword: form.password,
+      }),
+    );
 
-    try {
-      await resetPassword(email!, form.password);
-
+    if (resetPasswordThunk.fulfilled.match(result)) {
       setSuccess(true);
-      setTimeout(() => navigate("/login"), 2200);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      setError(
-        err.response?.data?.message ||
-          "Failed to reset password. Token may be invalid or expired.",
-      );
-    } finally {
-      setLoading(false);
+      setTimeout(() => navigate("/login", { replace: true }), 2200);
     }
   };
 
@@ -106,9 +101,9 @@ export default function ResetPassword() {
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-6">
-                {error && (
+                {(error || localError) && (
                   <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm">
-                    {error}
+                    {error || localError}
                   </div>
                 )}
 
@@ -173,9 +168,9 @@ export default function ResetPassword() {
 
                 <button
                   type="submit"
-                  disabled={loading || success}
+                  disabled={isLoading || success}
                   className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3.5 px-6 rounded-xl font-medium hover:from-indigo-700 hover:to-purple-700 disabled:opacity-60 transition-all transform hover:scale-[1.02] flex items-center justify-center gap-3">
-                  {loading ? (
+                  {isLoading ? (
                     <>
                       <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                       Resetting...

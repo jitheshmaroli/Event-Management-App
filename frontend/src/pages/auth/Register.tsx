@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Eye,
   EyeOff,
@@ -12,9 +12,13 @@ import {
   Zap,
 } from "lucide-react";
 import Joi from "joi";
-import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { OTP_PURPOSE } from "@/constants/otpPurpose";
+import { clearError } from "@/features/auth/authSlice";
+import { useAppDispatch } from "@/hooks/useAppDispatch";
+import { useAppSelector } from "@/hooks/useAppSelector";
+import { useAuthRedirect } from "@/hooks/useAuthRedirect";
+import { registerUser } from "@/features/auth/authThunk";
 
 const phoneRegex = /^[6-9]\d{9}$/;
 
@@ -72,12 +76,17 @@ export default function Register() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
-  const [loading, setLoading] = useState(false);
 
-  const { register } = useAuth();
+  const dispatch = useAppDispatch();
+  const { isLoading, error } = useAppSelector((state) => state.auth);
   const navigate = useNavigate();
 
-  // Real-time validation on change + after blur
+  useAuthRedirect();
+
+  useEffect(() => {
+    dispatch(clearError());
+  }, [dispatch]);
+
   const validateField = (name: string, value: string) => {
     const { error } = registerSchema.validate(
       { ...form, [name]: value },
@@ -155,24 +164,19 @@ export default function Register() {
       return;
     }
 
-    setLoading(true);
-
-    try {
-      await register({
+    const result = await dispatch(
+      registerUser({
         name: form.name.trim(),
         email: form.email.trim(),
         password: form.password,
         phone: form.phone.trim() || undefined,
-      });
+      }),
+    );
 
-      navigate("/verify-email", {
-        state: { email: form.email, purpose: OTP_PURPOSE.SIGNUP },
+    if (registerUser.fulfilled.match(result)) {
+      navigate("/verify-otp", {
+        state: { email: form.email.trim(), purpose: OTP_PURPOSE.SIGNUP },
       });
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      console.log(err);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -270,7 +274,7 @@ export default function Register() {
                   )}
                 </div>
 
-                {/* Phone - Optional */}
+                {/* Phone */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     Phone Number{" "}
@@ -398,9 +402,9 @@ export default function Register() {
                 {/* Submit Button */}
                 <button
                   onClick={handleSubmit}
-                  disabled={loading}
+                  disabled={isLoading}
                   className="w-full bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white py-3 px-4 rounded-lg font-medium hover:from-violet-700 hover:to-fuchsia-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-violet-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-[1.02] active:scale-[0.98] mt-2">
-                  {loading ? (
+                  {isLoading ? (
                     <span className="flex items-center justify-center gap-2">
                       <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                       Creating account...
@@ -409,6 +413,12 @@ export default function Register() {
                     "Create Account"
                   )}
                 </button>
+
+                {error && (
+                  <div className="mt-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm text-center">
+                    {error}
+                  </div>
+                )}
               </div>
             </form>
             <div className="relative">

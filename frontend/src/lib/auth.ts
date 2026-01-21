@@ -6,6 +6,7 @@ import type {
   SendOtpData,
   User,
   VerifyOtpData,
+  VerifyOtpResponse,
 } from "./types";
 
 export const login = async (
@@ -26,8 +27,13 @@ export const sendOtp = async (
   return (await api.post("/auth/send-otp", data)).data;
 };
 
-export const verifyOtp = async (data: VerifyOtpData): Promise<ApiResponse> => {
-  return (await api.post("/auth/verify-otp", data)).data;
+export const verifyOtp = async (
+  data: VerifyOtpData,
+): Promise<VerifyOtpResponse> => {
+  const response = await api.post("/auth/verify-otp", data);
+  const payload = response.data;
+  console.log("verifyOtp raw payload:", payload, "purpose:", data.purpose);
+  return payload as VerifyOtpResponse;
 };
 
 export const resetPassword = async (

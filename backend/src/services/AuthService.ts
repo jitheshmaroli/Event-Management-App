@@ -137,7 +137,7 @@ export class AuthService implements IAuthService {
       otpCreatedAt: undefined,
     });
 
-    if (user.otpPurpose === 'forgot_password') {
+    if (user.otpPurpose === OtpPurpose.FORGOT_PASSWORD) {
       return {
         message: MESSAGES.OTP.VERIFIED,
       };

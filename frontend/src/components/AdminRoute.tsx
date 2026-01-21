@@ -1,9 +1,11 @@
-import { Navigate, Outlet } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext';
-import AuthLoading from './AuthLoading';
+import { Navigate, Outlet } from "react-router-dom";
+import AuthLoading from "./AuthLoading";
+import { useAppSelector } from "@/hooks/useAppSelector";
 
 export default function AdminRoute() {
-  const { isAuthenticated, user, isLoading } = useAuth();
+  const { isAuthenticated, user, isLoading } = useAppSelector(
+    (state) => state.auth,
+  );
 
   if (isLoading) {
     return <AuthLoading />;
@@ -13,7 +15,7 @@ export default function AdminRoute() {
     return <Navigate to="/login" replace />;
   }
 
-  if (user?.role !== 'admin') {
+  if (user?.role !== "admin") {
     return <Navigate to="/dashboard" replace />;
   }
 

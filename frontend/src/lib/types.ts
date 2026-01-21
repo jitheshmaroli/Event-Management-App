@@ -39,9 +39,29 @@ export interface SendOtpData {
 export interface VerifyOtpData {
   email: string;
   otp: string;
+  purpose: OtpPurpose;
 }
 
 export interface VerifyEmailState {
   email: string;
   purpose: OtpPurpose;
 }
+
+export type ResetPasswordState = {
+  email: string;
+};
+
+export interface SignupVerifyResponse {
+  success: boolean;
+  message?: string;
+  data?: User;
+}
+
+
+// export interface ForgotPasswordVerifyResponse {
+//   success: boolean;
+//   message: string;
+// }
+
+export type VerifyOtpResponse = SignupVerifyResponse;
+// export type VerifyOtpResponse = SignupVerifyResponse | ForgotPasswordVerifyResponse;

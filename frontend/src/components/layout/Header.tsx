@@ -1,17 +1,23 @@
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext';
-import { Calendar, UserCircle, LogOut, LayoutDashboard } from 'lucide-react';
+import { Link, useNavigate } from "react-router-dom";
+import { Calendar, UserCircle, LogOut, LayoutDashboard } from "lucide-react";
+import { logoutUser } from "@/features/auth/authThunk.ts";
+import { useAppDispatch } from "@/hooks/useAppDispatch";
+import { useAppSelector } from "@/hooks/useAppSelector";
 
 export default function Header() {
-  const { user, isAuthenticated, signOut } = useAuth();
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+
+  const { isAuthenticated, user, isLoading } = useAppSelector(
+    (state) => state.auth,
+  );
 
   const handleLogout = async () => {
     try {
-      await signOut();
-      navigate('/login');
+      await dispatch(logoutUser()).unwrap();
+      navigate("/login", { replace: true });
     } catch (err) {
-      console.error('Logout failed:', err);
+      console.error("Logout failed:", err);
     }
   };
 
@@ -29,43 +35,43 @@ export default function Header() {
             </span>
           </Link>
 
-          {/* Navigation */}
+          {/* Navigation - shown only when authenticated */}
           <nav className="hidden md:flex items-center gap-8">
-            <Link
-              to="/"
-              className="text-gray-700 hover:text-indigo-600 font-medium transition-colors"
-            >
-              Home
-            </Link>
             {isAuthenticated && (
               <Link
-                to={user?.role === 'admin' ? '/admin/dashboard' : '/dashboard'}
-                className="text-gray-700 hover:text-indigo-600 font-medium transition-colors flex items-center gap-1"
-              >
+                to={user?.role === "admin" ? "/admin/dashboard" : "/dashboard"}
+                className="text-gray-700 hover:text-indigo-600 font-medium transition-colors flex items-center gap-1">
                 <LayoutDashboard size={18} />
                 Dashboard
               </Link>
             )}
           </nav>
 
-          {/* Auth section */}
+          {/* Auth / User section */}
           <div className="flex items-center gap-4">
-            {isAuthenticated ? (
+            {isLoading ? (
+              <div className="h-8 w-8 rounded-full border-2 border-indigo-500 border-t-transparent animate-spin" />
+            ) : isAuthenticated ? (
               <div className="flex items-center gap-4">
+                {/* User info - hidden on very small screens */}
                 <div className="hidden sm:flex items-center gap-3">
                   <div className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center">
                     <UserCircle className="h-6 w-6 text-indigo-600" />
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-medium text-gray-900">{user?.name}</p>
-                    <p className="text-xs text-gray-500 capitalize">{user?.role}</p>
+                    <p className="text-sm font-medium text-gray-900">
+                      {user?.name || "User"}
+                    </p>
+                    <p className="text-xs text-gray-500 capitalize">
+                      {user?.role || "user"}
+                    </p>
                   </div>
                 </div>
 
                 <button
                   onClick={handleLogout}
-                  className="px-4 py-2 bg-red-50 text-red-700 hover:bg-red-100 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
-                >
+                  disabled={isLoading}
+                  className="px-4 py-2 bg-red-50 text-red-700 hover:bg-red-100 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
                   <LogOut size={16} />
                   Logout
                 </button>
@@ -74,14 +80,12 @@ export default function Header() {
               <div className="flex items-center gap-4">
                 <Link
                   to="/login"
-                  className="text-gray-700 hover:text-indigo-600 font-medium transition-colors"
-                >
+                  className="text-gray-700 hover:text-indigo-600 font-medium transition-colors">
                   Sign in
                 </Link>
                 <Link
                   to="/register"
-                  className="px-5 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium shadow-sm"
-                >
+                  className="px-5 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium shadow-sm">
                   Sign up
                 </Link>
               </div>

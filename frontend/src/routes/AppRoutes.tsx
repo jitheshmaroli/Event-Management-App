@@ -1,17 +1,13 @@
 import { Routes, Route } from "react-router-dom";
-
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AdminRoute from "@/components/AdminRoute";
 import MainLayout from "@/components/layout/MainLayout";
-
 import Home from "@/pages/Home";
 import Login from "@/pages/auth/Login";
 import Register from "@/pages/auth/Register";
 import VerifyEmail from "@/pages/auth/VerifyOtp";
-
 import Dashboard from "@/pages/Dashboard";
 import AdminDashboard from "@/pages/Admin/Dashboard";
-
 import ServiceList from "@/pages/services/ServiceList";
 import ServiceDetail from "@/pages/services/ServiceDetail";
 import ForgotPassword from "@/pages/auth/ForgotPassword";
