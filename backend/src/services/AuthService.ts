@@ -176,7 +176,7 @@ export class AuthService implements IAuthService {
 
   async login(credentials: LoginInput): Promise<LoginResponse> {
     const user = await this._userRepo.findByEmail(credentials.email);
-    if (!user)
+    if (!user || user.role !== credentials.loginType)
       throw new UnauthorizedError(
         MESSAGES.USER.INVALID_CREDENTIALS,
         ERROR_CODES.INVALID_CREDENTIALS

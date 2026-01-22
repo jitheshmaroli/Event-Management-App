@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { Eye, EyeOff, Mail, Lock, Calendar, Sparkles } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useAppDispatch } from "@/hooks/useAppDispatch";
 import { useAppSelector } from "@/hooks/useAppSelector";
 import { clearError } from "@/features/auth/authSlice";
 import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import { loginUser } from "@/features/auth/authThunk";
+import { ROLES } from "@/constants/roles";
 
 export default function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
@@ -13,7 +14,6 @@ export default function Login() {
 
   const dispatch = useAppDispatch();
   const { isLoading, error } = useAppSelector((state) => state.auth);
-  const navigate = useNavigate();
 
   useAuthRedirect();
 
@@ -23,13 +23,13 @@ export default function Login() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const result = await dispatch(
-      loginUser({ email: form.email, password: form.password }),
+    await dispatch(
+      loginUser({
+        email: form.email,
+        password: form.password,
+        loginType: ROLES.USER,
+      }),
     );
-
-    if (loginUser.fulfilled.match(result)) {
-      navigate("/dashboard", { replace: true });
-    }
   };
 
   return (

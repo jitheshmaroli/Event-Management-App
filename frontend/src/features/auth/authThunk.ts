@@ -11,6 +11,7 @@ import {
 } from "@/lib/auth";
 import type { OtpPurpose, SendOtpData, User } from "@/lib/types";
 import { resetAuth } from "./authSlice";
+import type { Role } from "@/constants/roles";
 
 export const checkCurrentUser = createAsyncThunk<User | null>(
   "auth/checkCurrentUser",
@@ -30,7 +31,7 @@ export const checkCurrentUser = createAsyncThunk<User | null>(
 export const loginUser = createAsyncThunk(
   "auth/login",
   async (
-    credentials: { email: string; password: string },
+    credentials: { email: string; password: string; loginType: Role },
     { rejectWithValue },
   ) => {
     try {
@@ -86,8 +87,6 @@ export const verifyOtpThunk = createAsyncThunk<
   try {
     const data = await verifyOtp({ email, otp, purpose });
 
-    console.log("Raw verifyOtp response:", data);
-
     if (purpose === "forgot_password") {
       // Forgot password response
       if ("message" in data && typeof data.message === "string") {
@@ -104,7 +103,6 @@ export const verifyOtpThunk = createAsyncThunk<
       }
     }
   } catch (err: any) {
-    console.error("verifyOtp error:", err);
     return rejectWithValue(
       err.response?.data?.message ||
         err.message ||

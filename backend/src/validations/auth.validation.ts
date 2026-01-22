@@ -35,6 +35,7 @@ export const registerSchema = Joi.object({
 export const loginSchema = Joi.object({
   email: Joi.string().email().required(),
   password: Joi.string().required(),
+  loginType: Joi.string().required(),
 });
 
 export const resetPasswordSchema = Joi.object({

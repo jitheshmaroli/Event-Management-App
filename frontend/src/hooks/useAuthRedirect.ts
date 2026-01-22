@@ -1,25 +1,23 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAppSelector } from "@/hooks/useAppSelector";
+import { ROLES } from "@/constants/roles";
 
-export function useAuthRedirect() {
+export const useAuthRedirect = () => {
   const navigate = useNavigate();
-  const { user, isAuthenticated } = useAppSelector((state) => state.auth);
+  const { isAuthenticated, user, isLoading } = useAppSelector(
+    (state) => state.auth,
+  );
 
   useEffect(() => {
+    if (isLoading) return;
+
     if (isAuthenticated && user) {
-      switch (user.role) {
-        case "user":
-          navigate("/dashboard", { replace: true });
-          break;
-        case "admin":
-          navigate("/admin/dashboard", { replace: true });
-          break;
-        default:
-          // fallback
-          navigate("/dashboard", { replace: true });
-          break;
+      if (user.role === ROLES.ADMIN) {
+        navigate("/admin/dashboard", { replace: true });
+      } else {
+        navigate("/dashboard", { replace: true });
       }
     }
-  }, [isAuthenticated, user, navigate]);
-}
+  }, [isAuthenticated, user, isLoading, navigate]);
+};

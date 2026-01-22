@@ -117,8 +117,6 @@ export default function VerifyOtp() {
 
       setLocalError(null);
 
-      console.log("Submitting OTP for purpose:", otpPurpose);
-
       const result = await dispatch(
         verifyOtpThunk({
           email,
@@ -127,22 +125,16 @@ export default function VerifyOtp() {
         }),
       );
 
-      console.log("verifyOtpThunk result:", result);
-
       if (verifyOtpThunk.fulfilled.match(result)) {
         const payload = result.payload;
 
         setSuccess(true);
 
         if (otpPurpose === OTP_PURPOSE.SIGNUP) {
-          console.log("Signup verified → redirecting to dashboard");
           setSuccessMessage("Email verified! Redirecting to dashboard...");
+
           setTimeout(() => navigate("/dashboard", { replace: true }), 1500);
         } else if (otpPurpose === OTP_PURPOSE.FORGOT_PASSWORD) {
-          console.log(
-            "Forgot password verified → redirecting to reset password",
-          );
-
           const message =
             payload.purpose === OTP_PURPOSE.FORGOT_PASSWORD
               ? payload.message
@@ -153,7 +145,6 @@ export default function VerifyOtp() {
           }, 1500);
         }
       } else if (verifyOtpThunk.rejected.match(result)) {
-        console.log("OTP verification failed:", result.payload);
         setLocalError(result.payload as string);
       }
     },

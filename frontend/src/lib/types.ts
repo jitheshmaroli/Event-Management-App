@@ -1,12 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { OTP_PURPOSE } from "@/constants/otpPurpose";
+import type { Role } from "@/constants/roles";
 
 export interface User {
   userId: string;
   name: string;
   email: string;
   phone?: string;
-  role: "user" | "admin";
+  role: Role;
   isVerified: boolean;
 }
 
@@ -20,6 +21,7 @@ export interface ApiResponse<T = any> {
 export interface LoginCredentials {
   email: string;
   password: string;
+  loginType: Role;
 }
 
 export interface RegisterData {
@@ -56,7 +58,6 @@ export interface SignupVerifyResponse {
   message?: string;
   data?: User;
 }
-
 
 // export interface ForgotPasswordVerifyResponse {
 //   success: boolean;
