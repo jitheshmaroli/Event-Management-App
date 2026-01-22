@@ -23,24 +23,23 @@ export const registerSchema = Joi.object({
         'Password must include at least one uppercase letter, one lowercase letter, one number, and one special character',
       'any.required': 'Password is required',
     }),
-  confirmPassword: Joi.string().valid(Joi.ref('password')).required().messages({
-    'any.only': 'Passwords do not match',
-    'any.required': 'Confirm password is required',
-  }),
+  phone: Joi.string()
+    .pattern(/^[6-9]\d{9}$/)
+    .allow('')
+    .messages({
+      'string.pattern.base':
+        'Mobile number must be 10 digits starting with 6-9',
+    }),
 });
 
 export const loginSchema = Joi.object({
   email: Joi.string().email().required(),
   password: Joi.string().required(),
-});
-
-export const forgotPasswordSchema = Joi.object({
-  email: Joi.string().email().required(),
+  loginType: Joi.string().required(),
 });
 
 export const resetPasswordSchema = Joi.object({
   email: Joi.string().email().required(),
-  otp: Joi.string().length(6).required(),
   newPassword: Joi.string()
     .min(8)
     .max(64)
@@ -55,13 +54,6 @@ export const resetPasswordSchema = Joi.object({
         'Password must include at least one uppercase letter, one lowercase letter, one number, and one special character',
       'any.required': 'Password is required',
     }),
-  confirmPassword: Joi.string()
-    .valid(Joi.ref('newPassword'))
-    .required()
-    .messages({
-      'any.only': 'Passwords do not match',
-      'any.required': 'Confirm password is required',
-    }),
 });
 
 export const verifyOtpSchema = Joi.object({
@@ -69,7 +61,7 @@ export const verifyOtpSchema = Joi.object({
   otp: Joi.string().length(6).required(),
 });
 
-export const resendOtpSchema = Joi.object({
+export const sendOtpSchema = Joi.object({
   email: Joi.string().email().required(),
   purpose: Joi.string()
     .valid(...Object.values(OtpPurpose))

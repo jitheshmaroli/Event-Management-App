@@ -6,7 +6,7 @@ import { IUserRepository } from '../interfaces/repositories/IUserRepository';
 export class UserRepository implements IUserRepository {
   async findByEmail(email: string): Promise<IUser | null> {
     return User.findOne({ email }).select(
-      '+password +refreshToken +otp +otpCreatedAt'
+      '+password +refreshToken +otp +otpCreatedAt +otpPurpose'
     );
   }
 
