@@ -6,6 +6,7 @@ import { connectDB } from '@/config/index';
 import { errorHandler } from '@/middlewares/errorHandler';
 import logger from '@/utils/logger';
 import cookieParser from 'cookie-parser';
+import cors from 'cors';
 
 config();
 
@@ -14,6 +15,14 @@ const PORT = env.PORT;
 
 app.use(express.json());
 app.use(cookieParser());
+app.use(
+  cors({
+    origin: 'http://localhost:5173',
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
+  })
+);
 
 app.use('/api/auth', authRoutes);
 

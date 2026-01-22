@@ -23,6 +23,7 @@ import {
 } from '@/utils/jwt';
 import { OtpPurpose } from '@/constants/otpPurpose';
 import { IUser } from '@/models/User';
+import { UserDto } from '@/dtos/auth/UserDto';
 
 @injectable()
 export class AuthService implements IAuthService {
@@ -34,9 +35,11 @@ export class AuthService implements IAuthService {
     name,
     email,
     password,
+    phone,
   }: RegisterInput): Promise<RegisterResponse> {
     const existing = await this._userRepo.findByEmail(email);
-    if (existing) {
+
+    if (existing && existing.isVerified) {
       throw new ConflictError(
         MESSAGES.USER.ALREADY_EXISTS,
         ERROR_CODES.EMAIL_ALREADY_EXISTS
@@ -46,12 +49,31 @@ export class AuthService implements IAuthService {
     const hashed = await hashPassword(password);
     const otp = generateOTP();
 
+    if (existing && !existing.isVerified) {
+      await this._userRepo.updateById(existing._id.toString(), {
+        name,
+        password: hashed,
+        phone,
+        otp,
+        otpCreatedAt: new Date(),
+        otpPurpose: OtpPurpose.SIGNUP,
+      });
+
+      await sendOTPEmail(email, otp, OtpPurpose.SIGNUP, name);
+
+      return {
+        userId: existing._id.toString(),
+      };
+    }
+
     const user = await this._userRepo.create({
       name,
       email,
       password: hashed,
+      phone,
       otp,
       otpCreatedAt: new Date(),
+      otpPurpose: OtpPurpose.SIGNUP,
       isVerified: false,
     });
 
@@ -62,7 +84,7 @@ export class AuthService implements IAuthService {
     };
   }
 
-  async resendOtp(
+  async sendOtp(
     email: string,
     purpose: OtpPurpose
   ): Promise<{ message: string }> {
@@ -90,7 +112,10 @@ export class AuthService implements IAuthService {
     };
   }
 
-  async verifyOTP(email: string, otp: string): Promise<LoginResponse> {
+  async verifyOTP(
+    email: string,
+    otp: string
+  ): Promise<LoginResponse | { message: string }> {
     const user = await this._userRepo.findByEmail(email);
     if (!user)
       throw new NotFoundError(
@@ -108,9 +133,18 @@ export class AuthService implements IAuthService {
     }
 
     await this._userRepo.updateById(user._id.toString(), {
-      isVerified: true,
       otp: undefined,
       otpCreatedAt: undefined,
+    });
+
+    if (user.otpPurpose === OtpPurpose.FORGOT_PASSWORD) {
+      return {
+        message: MESSAGES.OTP.VERIFIED,
+      };
+    }
+
+    await this._userRepo.updateById(user._id.toString(), {
+      isVerified: true,
     });
 
     const accessToken = generateAccessToken({
@@ -134,6 +168,7 @@ export class AuthService implements IAuthService {
         userId: user._id.toString(),
         name: user.name,
         email: user.email,
+        phone: user.phone,
         role: user.role,
       },
     };
@@ -141,7 +176,7 @@ export class AuthService implements IAuthService {
 
   async login(credentials: LoginInput): Promise<LoginResponse> {
     const user = await this._userRepo.findByEmail(credentials.email);
-    if (!user)
+    if (!user || user.role !== credentials.loginType)
       throw new UnauthorizedError(
         MESSAGES.USER.INVALID_CREDENTIALS,
         ERROR_CODES.INVALID_CREDENTIALS
@@ -182,6 +217,7 @@ export class AuthService implements IAuthService {
         userId: user._id.toString(),
         name: user.name,
         email: user.email,
+        phone: user.phone,
         role: user.role,
       },
     };
@@ -195,26 +231,8 @@ export class AuthService implements IAuthService {
     return { message: MESSAGES.AUTH.LOGOUT_SUCCESS };
   }
 
-  async forgotPassword(email: string): Promise<{ message: string }> {
-    const user = await this._userRepo.findByEmail(email);
-    if (!user) {
-      return { message: MESSAGES.AUTH.OTP_SENT_IF_EMAIL_EXISTS };
-    }
-    const otp = generateOTP();
-
-    await this._userRepo.updateById(user._id.toString(), {
-      otp,
-      otpCreatedAt: new Date(),
-    });
-
-    await sendOTPEmail(email, otp, OtpPurpose.FORGOT_PASSWORD, user.name);
-
-    return { message: MESSAGES.OTP.SENT };
-  }
-
   async resetPassword(
     email: string,
-    otp: string,
     newPassword: string
   ): Promise<{ message: string }> {
     const user = await this._userRepo.findByEmail(email);
@@ -224,21 +242,10 @@ export class AuthService implements IAuthService {
         ERROR_CODES.USER_NOT_FOUND
       );
 
-    if (
-      !user.otp ||
-      !user.otpCreatedAt ||
-      user.otp !== otp ||
-      isOTPExpired(user.otpCreatedAt)
-    ) {
-      throw new BadRequestError(MESSAGES.OTP.INVALID, ERROR_CODES.OTP_INVALID);
-    }
-
     const hashed = await hashPassword(newPassword);
 
     await this._userRepo.updateById(user._id.toString(), {
       password: hashed,
-      otp: undefined,
-      otpCreatedAt: undefined,
     });
 
     return { message: MESSAGES.USER.PASSWORD_RESET_SUCCESS };
@@ -304,6 +311,26 @@ export class AuthService implements IAuthService {
       accessToken: newAccessToken,
       refreshToken: newRefreshToken,
     };
+  }
+
+  async getCurrentUser(userId: string): Promise<{ user: UserDto }> {
+    const user = await this._userRepo.findById(userId);
+    if (!user)
+      throw new NotFoundError(
+        MESSAGES.USER.NOT_FOUND,
+        ERROR_CODES.USER_NOT_FOUND
+      );
+
+    const userData = {
+      userId: user._id.toString(),
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      phone: user.phone,
+      isVerified: user.isVerified,
+    };
+
+    return { user: userData };
   }
 
   private _validateOtpPurpose(user: IUser, purpose: OtpPurpose) {
