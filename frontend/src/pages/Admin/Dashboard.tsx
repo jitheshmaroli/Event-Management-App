@@ -11,37 +11,18 @@ import {
 
 import { useAppSelector } from "@/hooks/useAppSelector";
 
-interface BookingItem {
-  id: string;
-  customer: string;
-  service: string;
-  date: string;
-  amount: number;
-  status: "pending" | "confirmed" | "cancelled" | "completed";
-}
-
 export default function AdminDashboard() {
   const navigate = useNavigate();
 
-  // Get auth state from Redux
   const {
     user,
     isAuthenticated,
     isLoading: authLoading,
   } = useAppSelector((state) => state.auth);
 
-  const [stats, setStats] = useState({
-    totalBookings: 0,
-    totalRevenue: 0,
-    pendingBookings: 0,
-    activeServices: 0,
-  });
-
-  const [recentBookings, setRecentBookings] = useState<BookingItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Redirect if not authenticated or not admin
     if (!isAuthenticated && !authLoading) {
       navigate("/login", { replace: true });
       return;
@@ -52,62 +33,12 @@ export default function AdminDashboard() {
       return;
     }
 
-    // Only fetch data if authenticated + admin
     if (isAuthenticated && user?.role === "admin") {
       const loadData = async () => {
         try {
           setLoading(true);
 
-          // TODO: Replace with real API call
-          // const res = await api.get('/admin/stats');
-          // setStats(res.data.stats);
-          // const bookingsRes = await api.get('/admin/recent-bookings');
-          // setRecentBookings(bookingsRes.data.bookings || []);
-
-          // Simulated delay + data
           await new Promise((resolve) => setTimeout(resolve, 1500));
-
-          setStats({
-            totalBookings: 248,
-            totalRevenue: 1245000,
-            pendingBookings: 17,
-            activeServices: 86,
-          });
-
-          setRecentBookings([
-            {
-              id: "BK-2026012",
-              customer: "Priya Sharma",
-              service: "Luxury Waterfront Venue",
-              date: "2026-02-14",
-              amount: 65000,
-              status: "pending",
-            },
-            {
-              id: "BK-2026011",
-              customer: "Rahul Mehta",
-              service: "Professional Wedding Photography",
-              date: "2026-01-25",
-              amount: 32000,
-              status: "confirmed",
-            },
-            {
-              id: "BK-2026010",
-              customer: "Aisha Khan",
-              service: "Live Band & DJ Combo",
-              date: "2026-01-18",
-              amount: 45000,
-              status: "completed",
-            },
-            {
-              id: "BK-2026009",
-              customer: "Vikram Singh",
-              service: "Catering (200 guests)",
-              date: "2026-02-05",
-              amount: 98000,
-              status: "cancelled",
-            },
-          ]);
         } catch (err) {
           console.error("Failed to load admin dashboard data:", err);
         } finally {
@@ -119,22 +50,6 @@ export default function AdminDashboard() {
     }
   }, [isAuthenticated, authLoading, user?.role, navigate]);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "pending":
-        return "bg-yellow-100 text-yellow-800";
-      case "confirmed":
-        return "bg-green-100 text-green-800";
-      case "completed":
-        return "bg-blue-100 text-blue-800";
-      case "cancelled":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  // Show full-page loading while checking auth or fetching data
   if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -164,7 +79,8 @@ export default function AdminDashboard() {
             <div className="flex gap-4">
               <Link
                 to="/admin/services/new"
-                className="px-5 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition flex items-center gap-2 shadow-sm">
+                className="px-5 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition flex items-center gap-2 shadow-sm"
+              >
                 <ShoppingBag size={18} />
                 Add New Service
               </Link>
@@ -180,9 +96,7 @@ export default function AdminDashboard() {
                 <p className="text-sm font-medium text-gray-500">
                   Total Bookings
                 </p>
-                <p className="text-3xl font-bold text-indigo-600 mt-2">
-                  {stats.totalBookings}
-                </p>
+                <p className="text-3xl font-bold text-indigo-600 mt-2"></p>
               </div>
               <div className="bg-indigo-100 p-4 rounded-full">
                 <Calendar className="h-7 w-7 text-indigo-600" />
@@ -196,9 +110,7 @@ export default function AdminDashboard() {
                 <p className="text-sm font-medium text-gray-500">
                   Total Revenue
                 </p>
-                <p className="text-3xl font-bold text-green-600 mt-2">
-                  ₹{stats.totalRevenue.toLocaleString()}
-                </p>
+                <p className="text-3xl font-bold text-green-600 mt-2"></p>
               </div>
               <div className="bg-green-100 p-4 rounded-full">
                 <DollarSign className="h-7 w-7 text-green-600" />
@@ -212,9 +124,7 @@ export default function AdminDashboard() {
                 <p className="text-sm font-medium text-gray-500">
                   Pending Bookings
                 </p>
-                <p className="text-3xl font-bold text-amber-600 mt-2">
-                  {stats.pendingBookings}
-                </p>
+                <p className="text-3xl font-bold text-amber-600 mt-2"></p>
               </div>
               <div className="bg-amber-100 p-4 rounded-full">
                 <AlertTriangle className="h-7 w-7 text-amber-600" />
@@ -228,9 +138,7 @@ export default function AdminDashboard() {
                 <p className="text-sm font-medium text-gray-500">
                   Active Services
                 </p>
-                <p className="text-3xl font-bold text-purple-600 mt-2">
-                  {stats.activeServices}
-                </p>
+                <p className="text-3xl font-bold text-purple-600 mt-2"></p>
               </div>
               <div className="bg-purple-100 p-4 rounded-full">
                 <ShoppingBag className="h-7 w-7 text-purple-600" />
@@ -243,7 +151,8 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
           <Link
             to="/admin/services"
-            className="bg-white rounded-xl shadow-md p-8 hover:shadow-lg transition border border-gray-100 group">
+            className="bg-white rounded-xl shadow-md p-8 hover:shadow-lg transition border border-gray-100 group"
+          >
             <div className="flex items-center gap-4 mb-4">
               <div className="bg-indigo-100 p-4 rounded-full group-hover:bg-indigo-200 transition">
                 <ShoppingBag className="h-8 w-8 text-indigo-600" />
@@ -264,7 +173,8 @@ export default function AdminDashboard() {
 
           <Link
             to="/admin/bookings"
-            className="bg-white rounded-xl shadow-md p-8 hover:shadow-lg transition border border-gray-100 group">
+            className="bg-white rounded-xl shadow-md p-8 hover:shadow-lg transition border border-gray-100 group"
+          >
             <div className="flex items-center gap-4 mb-4">
               <div className="bg-blue-100 p-4 rounded-full group-hover:bg-blue-200 transition">
                 <Calendar className="h-8 w-8 text-blue-600" />
@@ -307,7 +217,8 @@ export default function AdminDashboard() {
             </h2>
             <Link
               to="/admin/bookings"
-              className="text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1">
+              className="text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1"
+            >
               View All <ChevronRight size={18} />
             </Link>
           </div>
@@ -336,36 +247,7 @@ export default function AdminDashboard() {
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {recentBookings.map((booking) => (
-                  <tr key={booking.id} className="hover:bg-gray-50 transition">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {booking.id}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                      {booking.customer}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                      {booking.service}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                      {booking.date}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      ₹{booking.amount.toLocaleString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(
-                          booking.status,
-                        )}`}>
-                        {booking.status.charAt(0).toUpperCase() +
-                          booking.status.slice(1)}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
+              <tbody className="bg-white divide-y divide-gray-200"></tbody>
             </table>
           </div>
         </div>

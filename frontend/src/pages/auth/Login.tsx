@@ -183,7 +183,8 @@ export default function Login() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  >
                     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
                 </div>
@@ -191,18 +192,10 @@ export default function Login() {
 
               {/* Remember & Forgot */}
               <div className="flex items-center justify-between">
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
-                  />
-                  <span className="ml-2 text-sm text-gray-600">
-                    Remember me
-                  </span>
-                </label>
                 <Link
                   to="/forgot-password"
-                  className="text-sm font-medium text-indigo-600 hover:text-indigo-500">
+                  className="text-sm font-medium text-indigo-600 hover:text-indigo-500"
+                >
                   Forgot password?
                 </Link>
               </div>
@@ -211,7 +204,8 @@ export default function Login() {
               <button
                 onClick={handleSubmit}
                 disabled={isLoading}
-                className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 px-4 rounded-lg font-medium hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-[1.02] active:scale-[0.98]">
+                className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 px-4 rounded-lg font-medium hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+              >
                 {isLoading ? (
                   <span className="flex items-center justify-center gap-2">
                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
@@ -235,7 +229,8 @@ export default function Login() {
               Don't have an account?{" "}
               <Link
                 to="/register"
-                className="font-medium text-indigo-600 hover:text-indigo-500">
+                className="font-medium text-indigo-600 hover:text-indigo-500"
+              >
                 create a new account
               </Link>
             </p>

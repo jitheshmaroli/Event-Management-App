@@ -2,6 +2,7 @@ import { configureStore } from "@reduxjs/toolkit";
 import { persistReducer, persistStore } from "redux-persist";
 import storage from "redux-persist/lib/storage";
 import authReducer from "@/features/auth/authSlice";
+import serviceReducer from "@/features/services/servicesSlice";
 
 const persistConfig = {
   key: "root",
@@ -14,6 +15,7 @@ const persistedReducer = persistReducer(persistConfig, authReducer);
 export const store = configureStore({
   reducer: {
     auth: persistedReducer,
+    services: serviceReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
@@ -26,6 +28,5 @@ export const store = configureStore({
 
 export const persistor = persistStore(store);
 
-// Infer types
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;

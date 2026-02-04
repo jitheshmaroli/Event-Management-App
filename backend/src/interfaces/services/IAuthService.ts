@@ -1,7 +1,7 @@
 import { OtpPurpose } from '@/constants/otpPurpose';
-import { LoginInput, LoginResponse } from '@/dtos/auth/LoginDto';
-import { RegisterInput, RegisterResponse } from '@/dtos/auth/RegisterDto';
-import { UserDto } from '@/dtos/auth/UserDto';
+import { LoginInput, LoginResponse } from '@/dtos/auth/login.dto';
+import { RegisterInput, RegisterResponse } from '@/dtos/auth/register.dto';
+import { UserDto } from '@/dtos/auth/user.dto';
 
 export interface IAuthService {
   register(data: RegisterInput): Promise<RegisterResponse>;

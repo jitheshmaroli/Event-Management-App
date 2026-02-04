@@ -1,70 +1,97 @@
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { Search, SlidersHorizontal, MapPin, DollarSign } from 'lucide-react';
+// F:\Event-Management\frontend\src\pages\services\ServiceList.tsx
+import { useState, useEffect } from "react";
+import { Link, useSearchParams } from "react-router-dom";
+import { Search, SlidersHorizontal, MapPin, DollarSign } from "lucide-react";
+import { useAppDispatch } from "@/hooks/useAppDispatch"; // Assuming useAppDispatch is correctly defined
+import { fetchServices } from "@/features/services/servicesThunks";
+import { useAppSelector } from "@/hooks/useAppSelector";
 
-// Placeholder type - replace with real type from backend later
-interface Service {
-  id: string;
-  title: string;
-  category: string;
-  pricePerDay: number;
-  location: string;
-  description: string;
-  imageUrl?: string;
-  availableDates?: string[]; // simplified
+const CATEGORIES = [
+  "Venue",
+  "Caterer",
+  "Photographer",
+  "DJ/Music",
+  "Decorator",
+  "Makeup Artist",
+  "Event Planner",
+];
+
+function useDebounce(value: string, delay: number) {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
 }
 
-const CATEGORIES = ['Venue', 'Caterer', 'Photographer', 'DJ/Music', 'Decorator', 'Makeup Artist', 'Event Planner'];
-
 export default function ServicesList() {
-  const [services, setServices] = useState<Service[]>([]);
-  const [loading, setLoading] = useState(true);
+  const dispatch = useAppDispatch();
+  const { services, loading, pagination } = useAppSelector(
+    (state) => state.services,
+  );
+  const [searchParams, setSearchParams] = useSearchParams();
   const [filters, setFilters] = useState({
-    search: '',
-    category: '',
-    priceMin: '',
-    priceMax: '',
-    location: '',
-    date: '',
+    search: "",
+    category: "",
+    priceMin: "",
+    priceMax: "",
+    location: "",
+    date: "",
   });
+  const [page, setPage] = useState(Number(searchParams.get("page")) || 1);
 
-  // Simulate API fetch
+  const debouncedSearch = useDebounce(filters.search, 300);
+  const debouncedLocation = useDebounce(filters.location, 300);
+
   useEffect(() => {
-    setTimeout(() => {
-      setServices([
-        { id: 's1', title: 'Luxury Garden Venue Marine Drive', category: 'Venue', pricePerDay: 45000, location: 'Mumbai', description: 'Beautiful sea-facing garden...', imageUrl: 'https://images.unsplash.com/photo-1519167758481-83f269a55a6c' },
-        { id: 's2', title: 'Premium Wedding Catering - 300 pax', category: 'Caterer', pricePerDay: 1200, location: 'Delhi', description: 'Multi-cuisine wedding specialist...', imageUrl: 'https://images.unsplash.com/photo-1555244162-803834f70033' },
-        { id: 's3', title: 'Professional Candid Photography Team', category: 'Photographer', pricePerDay: 28000, location: 'Bangalore', description: 'Candid & cinematic style...', imageUrl: 'https://images.unsplash.com/photo-1523438885200-e635ba2c371e' },
-        { id: 's4', title: 'Live Band + DJ Combo', category: 'DJ/Music', pricePerDay: 38000, location: 'Pune', description: 'High energy performances...', imageUrl: 'https://images.unsplash.com/photo-1501612780327-45045538702b' },
-      ]);
-      setLoading(false);
-    }, 1200);
-  }, []);
+    const params = new URLSearchParams();
+    if (filters.search) params.set("search", filters.search);
+    if (filters.category) params.set("category", filters.category);
+    if (filters.priceMin) params.set("minPrice", filters.priceMin);
+    if (filters.priceMax) params.set("maxPrice", filters.priceMax);
+    if (filters.location) params.set("location", filters.location);
+    if (filters.date) params.set("date", filters.date);
+    if (page > 1) params.set("page", page.toString());
+    setSearchParams(params, { replace: true });
+  }, [filters, page, setSearchParams]);
 
-  const filteredServices = services.filter(service => {
-    const matchesSearch = !filters.search || 
-      service.title.toLowerCase().includes(filters.search.toLowerCase()) ||
-      service.description.toLowerCase().includes(filters.search.toLowerCase());
-    
-    const matchesCategory = !filters.category || service.category === filters.category;
-    
-    const price = service.pricePerDay;
-    const matchesPrice = 
-      (!filters.priceMin || price >= Number(filters.priceMin)) &&
-      (!filters.priceMax || price <= Number(filters.priceMax));
-    
-    const matchesLocation = !filters.location || 
-      service.location.toLowerCase().includes(filters.location.toLowerCase());
-    
-    // Date availability would need real backend logic - placeholder
-    const matchesDate = !filters.date || true;
+  useEffect(() => {
+    const query = {
+      search: debouncedSearch || undefined,
+      category: filters.category || undefined,
+      minPrice: filters.priceMin ? Number(filters.priceMin) : undefined,
+      maxPrice: filters.priceMax ? Number(filters.priceMax) : undefined,
+      location: debouncedLocation || undefined,
+      date: filters.date || undefined,
+      page,
+      limit: 12,
+    };
+    dispatch(fetchServices(query));
+  }, [
+    debouncedSearch,
+    debouncedLocation,
+    filters.category,
+    filters.priceMin,
+    filters.priceMax,
+    filters.date,
+    page,
+    dispatch,
+  ]);
 
-    return matchesSearch && matchesCategory && matchesPrice && matchesLocation && matchesDate;
-  });
-
-  const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleFilterChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
     const { name, value } = e.target;
-    setFilters(prev => ({ ...prev, [name]: value }));
+    setFilters((prev) => ({ ...prev, [name]: value }));
+    setPage(1);
   };
 
   return (
@@ -72,9 +99,12 @@ export default function ServicesList() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-10">
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900">All Services</h1>
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900">
+            All Services
+          </h1>
           <p className="mt-3 text-lg text-gray-600">
-            Find the perfect service providers for your event • {filteredServices.length} services found
+            Find the perfect service providers for your event •{" "}
+            {pagination?.total || 0} services found
           </p>
         </div>
 
@@ -87,9 +117,14 @@ export default function ServicesList() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Search</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Search
+              </label>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                <Search
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                  size={18}
+                />
                 <input
                   name="search"
                   value={filters.search}
@@ -101,7 +136,9 @@ export default function ServicesList() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Category
+              </label>
               <select
                 name="category"
                 value={filters.category}
@@ -109,17 +146,24 @@ export default function ServicesList() {
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white"
               >
                 <option value="">All Categories</option>
-                {CATEGORIES.map(cat => (
-                  <option key={cat} value={cat}>{cat}</option>
+                {CATEGORIES.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
                 ))}
               </select>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Price min</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Price min
+                </label>
                 <div className="relative">
-                  <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                  <DollarSign
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                    size={18}
+                  />
                   <input
                     name="priceMin"
                     type="number"
@@ -131,9 +175,14 @@ export default function ServicesList() {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Price max</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Price max
+                </label>
                 <div className="relative">
-                  <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                  <DollarSign
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                    size={18}
+                  />
                   <input
                     name="priceMax"
                     type="number"
@@ -147,9 +196,14 @@ export default function ServicesList() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Location
+              </label>
               <div className="relative">
-                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                <MapPin
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                  size={18}
+                />
                 <input
                   name="location"
                   value={filters.location}
@@ -166,16 +220,30 @@ export default function ServicesList() {
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {[...Array(6)].map((_, i) => (
-              <div key={i} className="bg-white rounded-xl shadow-md overflow-hidden h-96 animate-pulse"></div>
+              <div
+                key={i}
+                className="bg-white rounded-xl shadow-md overflow-hidden h-96 animate-pulse"
+              ></div>
             ))}
           </div>
-        ) : filteredServices.length === 0 ? (
+        ) : (pagination?.total || 0) === 0 ? (
           <div className="text-center py-20">
             <div className="text-gray-400 text-6xl mb-6">😔</div>
-            <h3 className="text-2xl font-semibold text-gray-700 mb-3">No services found</h3>
+            <h3 className="text-2xl font-semibold text-gray-700 mb-3">
+              No services found
+            </h3>
             <p className="text-gray-600 mb-6">Try adjusting your filters</p>
-            <button 
-              onClick={() => setFilters({ search: '', category: '', priceMin: '', priceMax: '', location: '', date: '' })}
+            <button
+              onClick={() =>
+                setFilters({
+                  search: "",
+                  category: "",
+                  priceMin: "",
+                  priceMax: "",
+                  location: "",
+                  date: "",
+                })
+              }
               className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
             >
               Reset Filters
@@ -183,48 +251,73 @@ export default function ServicesList() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredServices.map(service => (
+            {services.map((service) => (
               <Link
-                key={service.id}
-                to={`/services/${service.id}`}
-                className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 border border-gray-100 group"
+                key={service._id}
+                to={`/services/${service._id}`}
+                className="group bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl hover:border-indigo-200 border border-gray-100 transition-all duration-300 flex flex-col"
               >
-                <div className="h-56 bg-gradient-to-br from-gray-200 to-gray-300 relative overflow-hidden">
-                  {service.imageUrl && (
-                    <img 
-                      src={service.imageUrl} 
+                <div className="relative h-56 overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200">
+                  {service.signedImages?.[0] && (
+                    <img
+                      src={service.signedImages[0]}
                       alt={service.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
                     />
                   )}
+                  <span className="absolute top-4 right-4 px-3 py-1.5 bg-indigo-600/90 text-white text-xs font-medium rounded-full backdrop-blur-sm">
+                    {service.category}
+                  </span>
                 </div>
-                
-                <div className="p-6">
-                  <div className="flex justify-between items-start mb-3">
-                    <h3 className="text-xl font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">
-                      {service.title}
-                    </h3>
-                    <span className="inline-flex px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm font-medium">
-                      {service.category}
-                    </span>
-                  </div>
 
-                  <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                <div className="p-6 flex flex-col flex-grow">
+                  <h3 className="text-xl font-bold text-gray-900 group-hover:text-indigo-700 transition-colors mb-2 line-clamp-2">
+                    {service.title}
+                  </h3>
+
+                  <p className="text-gray-600 text-sm mb-4 line-clamp-2 flex-grow">
                     {service.description}
                   </p>
 
-                  <div className="flex items-center justify-between">
-                    <div className="text-xl font-bold text-green-600">
-                      ₹{service.pricePerDay.toLocaleString()}<span className="text-sm font-normal text-gray-500"> /day</span>
+                  <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-100">
+                    <div className="text-2xl font-bold text-green-600">
+                      ₹{service.pricePerDay.toLocaleString()}
+                      <span className="text-base font-normal text-gray-500">
+                        {" "}
+                        /day
+                      </span>
                     </div>
-                    <div className="flex items-center text-sm text-gray-500">
-                      <MapPin size={16} className="mr-1" />
+                    <div className="flex items-center text-sm text-gray-600">
+                      <MapPin size={16} className="mr-1.5" />
                       {service.location}
                     </div>
                   </div>
                 </div>
               </Link>
             ))}
+          </div>
+        )}
+
+        {/* Pagination */}
+        {pagination && pagination.pages > 1 && (
+          <div className="flex justify-between items-center mt-12 max-w-md mx-auto">
+            <button
+              className="px-4 py-2 bg-indigo-600 text-white rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed"
+              disabled={page === 1}
+              onClick={() => setPage(page - 1)}
+            >
+              Previous
+            </button>
+            <span className="text-gray-600">
+              Page {page} of {pagination.pages}
+            </span>
+            <button
+              className="px-4 py-2 bg-indigo-600 text-white rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed"
+              disabled={page === pagination.pages}
+              onClick={() => setPage(page + 1)}
+            >
+              Next
+            </button>
           </div>
         )}
       </div>

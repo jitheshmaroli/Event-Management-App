@@ -1,7 +1,40 @@
-import { Link } from 'react-router-dom';
-import { Search, Calendar, MapPin, DollarSign, Users, Music, Camera, Utensils } from 'lucide-react';
+// F:\Event-Management\frontend\src\pages\Home.tsx
+import { Link, useNavigate } from "react-router-dom";
+import {
+  Search,
+  Calendar,
+  MapPin,
+  DollarSign,
+  Users,
+  Music,
+  Camera,
+  Utensils,
+} from "lucide-react";
+import { useState } from "react";
 
 export default function Home() {
+  const navigate = useNavigate();
+  const [quickSearch, setQuickSearch] = useState({
+    search: "",
+    location: "",
+    date: "",
+  });
+
+  const handleQuickSearchChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
+    const { name, value } = e.target;
+    setQuickSearch((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleQuickSearch = () => {
+    const params = new URLSearchParams();
+    if (quickSearch.search) params.append("search", quickSearch.search);
+    if (quickSearch.location) params.append("location", quickSearch.location);
+    if (quickSearch.date) params.append("date", quickSearch.date);
+    navigate(`/services?${params.toString()}`);
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       {/* Hero Section */}
@@ -17,24 +50,39 @@ export default function Home() {
           </h1>
 
           <p className="text-xl md:text-2xl text-indigo-100 mb-10 max-w-3xl mx-auto">
-            Find and book the best venues, caterers, photographers, DJs and more — all in one place
+            Find and book the best venues, caterers, photographers, DJs and more
+            — all in one place
           </p>
 
           {/* Quick Search Teaser */}
           <div className="max-w-4xl mx-auto bg-white/10 backdrop-blur-lg rounded-2xl p-6 shadow-2xl border border-white/20">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-300" size={20} />
+                <Search
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-300"
+                  size={20}
+                />
                 <input
+                  name="search"
                   type="text"
                   placeholder="Search services..."
+                  value={quickSearch.search}
+                  onChange={handleQuickSearchChange}
                   className="w-full pl-12 pr-4 py-4 bg-white/20 border border-white/30 rounded-xl text-white placeholder-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-400"
                 />
               </div>
 
               <div className="relative">
-                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-300" size={20} />
-                <select className="w-full pl-12 pr-4 py-4 bg-white/20 border border-white/30 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-400 appearance-none">
+                <MapPin
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-300"
+                  size={20}
+                />
+                <select
+                  name="location"
+                  value={quickSearch.location}
+                  onChange={handleQuickSearchChange}
+                  className="w-full pl-12 pr-4 py-4 bg-white/20 border border-white/30 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-400 appearance-none"
+                >
                   <option value="">Location</option>
                   <option>Mumbai</option>
                   <option>Delhi</option>
@@ -44,14 +92,24 @@ export default function Home() {
               </div>
 
               <div className="relative">
-                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-300" size={20} />
+                <Calendar
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-300"
+                  size={20}
+                />
                 <input
+                  name="date"
                   type="date"
+                  value={quickSearch.date}
+                  onChange={handleQuickSearchChange}
                   className="w-full pl-12 pr-4 py-4 bg-white/20 border border-white/30 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-400"
                 />
               </div>
 
-              <button className="bg-white text-indigo-900 font-bold py-4 px-8 rounded-xl hover:bg-indigo-100 transition transform hover:-translate-y-1 shadow-lg">
+              <button
+                type="button"
+                onClick={handleQuickSearch}
+                className="bg-white text-indigo-900 font-bold py-4 px-8 rounded-xl hover:bg-indigo-100 transition transform hover:-translate-y-1 shadow-lg"
+              >
                 Search Services
               </button>
             </div>
@@ -67,28 +125,66 @@ export default function Home() {
               Popular Service Categories
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Choose from a wide range of trusted service providers for your events
+              Choose from a wide range of trusted service providers for your
+              events
             </p>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8">
             {[
-              { icon: Utensils, title: "Caterers", color: "bg-emerald-100 text-emerald-700" },
-              { icon: Camera, title: "Photographers", color: "bg-blue-100 text-blue-700" },
-              { icon: Music, title: "DJs & Music", color: "bg-purple-100 text-purple-700" },
-              { icon: Users, title: "Marriage Venues", color: "bg-pink-100 text-pink-700" },
-              { icon: Calendar, title: "Hotels & Resorts", color: "bg-amber-100 text-amber-700" },
-              { icon: DollarSign, title: "Decorators", color: "bg-cyan-100 text-cyan-700" },
-              { icon: Users, title: "Makeup Artists", color: "bg-rose-100 text-rose-700" },
-              { icon: Calendar, title: "Event Planners", color: "bg-indigo-100 text-indigo-700" },
+              {
+                icon: Utensils,
+                title: "Caterers",
+                color: "bg-emerald-100 text-emerald-700",
+              },
+              {
+                icon: Camera,
+                title: "Photographers",
+                color: "bg-blue-100 text-blue-700",
+              },
+              {
+                icon: Music,
+                title: "DJs & Music",
+                color: "bg-purple-100 text-purple-700",
+              },
+              {
+                icon: Users,
+                title: "Marriage Venues",
+                color: "bg-pink-100 text-pink-700",
+              },
+              {
+                icon: Calendar,
+                title: "Hotels & Resorts",
+                color: "bg-amber-100 text-amber-700",
+              },
+              {
+                icon: DollarSign,
+                title: "Decorators",
+                color: "bg-cyan-100 text-cyan-700",
+              },
+              {
+                icon: Users,
+                title: "Makeup Artists",
+                color: "bg-rose-100 text-rose-700",
+              },
+              {
+                icon: Calendar,
+                title: "Event Planners",
+                color: "bg-indigo-100 text-indigo-700",
+              },
             ].map((category, index) => (
               <Link
                 key={index}
-                to="/services"
+                to={`/services?category=${category.title}`}
                 className="group bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100"
               >
-                <div className={`h-28 ${category.color} flex items-center justify-center`}>
-                  <category.icon size={48} className="opacity-80 group-hover:opacity-100 transition-opacity" />
+                <div
+                  className={`h-28 ${category.color} flex items-center justify-center`}
+                >
+                  <category.icon
+                    size={48}
+                    className="opacity-80 group-hover:opacity-100 transition-opacity"
+                  />
                 </div>
                 <div className="p-6 text-center">
                   <h3 className="text-xl font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors">

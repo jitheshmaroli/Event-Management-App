@@ -1,4 +1,3 @@
-import { env } from '@/config/env.config';
 import { Response } from 'express';
 
 export const setAuthCookies = (
@@ -8,15 +7,15 @@ export const setAuthCookies = (
 ) => {
   res.cookie('accessToken', accessToken, {
     httpOnly: true,
-    secure: env.NODE_ENV === 'production',
-    sameSite: 'strict',
+    secure: true,
+    sameSite: 'none',
     maxAge: 15 * 60 * 1000,
   });
 
   res.cookie('refreshToken', refreshToken, {
     httpOnly: true,
-    secure: env.NODE_ENV === 'production',
-    sameSite: 'strict',
+    secure: true,
+    sameSite: 'none',
     maxAge: 30 * 24 * 60 * 60 * 1000,
   });
 };

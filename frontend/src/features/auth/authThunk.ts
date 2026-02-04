@@ -12,6 +12,7 @@ import {
 import type { OtpPurpose, SendOtpData, User } from "@/lib/types";
 import { resetAuth } from "./authSlice";
 import type { Role } from "@/constants/roles";
+import { OTP_PURPOSE } from "@/constants/otpPurpose";
 
 export const checkCurrentUser = createAsyncThunk<User | null>(
   "auth/checkCurrentUser",
@@ -87,17 +88,17 @@ export const verifyOtpThunk = createAsyncThunk<
   try {
     const data = await verifyOtp({ email, otp, purpose });
 
-    if (purpose === "forgot_password") {
+    if (purpose === OTP_PURPOSE.FORGOT_PASSWORD) {
       // Forgot password response
       if ("message" in data && typeof data.message === "string") {
-        return { purpose: "forgot_password", message: data.message };
+        return { purpose: OTP_PURPOSE.FORGOT_PASSWORD, message: data.message };
       } else {
         throw new Error("Unexpected response format for forgot_password");
       }
     } else {
       // Signup response
       if (data.data) {
-        return { purpose: "signup", user: data.data };
+        return { purpose: OTP_PURPOSE.SIGNUP, user: data.data };
       } else {
         throw new Error("Verification succeeded but no user data returned");
       }

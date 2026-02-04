@@ -12,7 +12,7 @@ import {
   Zap,
 } from "lucide-react";
 import Joi from "joi";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { OTP_PURPOSE } from "@/constants/otpPurpose";
 import { clearError } from "@/features/auth/authSlice";
 import { useAppDispatch } from "@/hooks/useAppDispatch";
@@ -345,7 +345,8 @@ export default function Register() {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
                       {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                     </button>
                   </div>
@@ -384,7 +385,8 @@ export default function Register() {
                       onClick={() =>
                         setShowConfirmPassword(!showConfirmPassword)
                       }
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
                       {showConfirmPassword ? (
                         <EyeOff size={20} />
                       ) : (
@@ -403,7 +405,8 @@ export default function Register() {
                 <button
                   onClick={handleSubmit}
                   disabled={isLoading}
-                  className="w-full bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white py-3 px-4 rounded-lg font-medium hover:from-violet-700 hover:to-fuchsia-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-violet-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-[1.02] active:scale-[0.98] mt-2">
+                  className="w-full bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white py-3 px-4 rounded-lg font-medium hover:from-violet-700 hover:to-fuchsia-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-violet-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-[1.02] active:scale-[0.98] mt-2"
+                >
                   {isLoading ? (
                     <span className="flex items-center justify-center gap-2">
                       <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
@@ -429,11 +432,12 @@ export default function Register() {
             {/* Sign In Link */}
             <p className="mt-8 text-center text-sm text-gray-600">
               Already have an account?{" "}
-              <a
-                href="#"
-                className="font-medium text-violet-600 hover:text-violet-500">
+              <Link
+                to="/login"
+                className="font-medium text-indigo-600 hover:text-indigo-500"
+              >
                 Sign in
-              </a>
+              </Link>
             </p>
           </div>
 

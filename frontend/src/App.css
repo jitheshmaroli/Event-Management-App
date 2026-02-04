@@ -1,0 +1,29 @@
+/* Make navigation arrows clearer */
+.react-datepicker__navigation {
+  top: 13px;
+  width: 24px;
+  height: 24px;
+  border: 0.45rem solid transparent;
+  z-index: 1;
+}
+
+.react-datepicker__navigation--previous {
+  border-right-color: #4b5563; /* gray-700 */
+  left: 10px;
+}
+
+.react-datepicker__navigation--next {
+  border-left-color: #4b5563;
+  right: 10px;
+}
+
+.react-datepicker__navigation:hover {
+  border-right-color: #1f2937; /* darker on hover for previous */
+  border-left-color: #1f2937;  /* darker on hover for next */
+}
+
+/* Optional: bigger touch target */
+.react-datepicker__navigation-icon {
+  width: 12px !important;
+  height: 12px !important;
+}
