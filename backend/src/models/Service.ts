@@ -1,20 +1,25 @@
+import { ServiceCategory } from '@/constants/service.constants';
 import { Schema, model } from 'mongoose';
 
 export interface IService {
   title: string;
-  category: string;
+  category: ServiceCategory;
   description: string;
   pricePerDay: number;
   location: string;
-  contactDetails: {
-    phone: string;
-    email?: string;
-    whatsapp?: string;
-  };
+  phone: string;
   images: string[];
   availability: {
-    defaultAvailable: boolean;
+    availableRanges: {
+      from: Date;
+      to: Date;
+    }[];
     blockedRanges: {
+      from: Date;
+      to: Date;
+      reason?: string;
+    }[];
+    bookedRanges: {
       from: Date;
       to: Date;
       reason?: string;
@@ -24,6 +29,12 @@ export interface IService {
   updatedAt?: Date;
 }
 
+const rangeSchema = new Schema({
+  from: { type: Date, required: true },
+  to: { type: Date, required: true },
+  reason: { type: String, trim: true, maxlength: 200 },
+});
+
 const serviceSchema = new Schema<IService>(
   {
     title: { type: String, required: true, trim: true, maxlength: 120 },
@@ -31,21 +42,12 @@ const serviceSchema = new Schema<IService>(
     description: { type: String, required: true, maxlength: 3000 },
     pricePerDay: { type: Number, required: true, min: 100 },
     location: { type: String, required: true, trim: true },
-    contactDetails: {
-      phone: { type: String, required: true },
-      email: String,
-      whatsapp: String,
-    },
+    phone: { type: String, required: true },
     images: [{ type: String }],
     availability: {
-      defaultAvailable: { type: Boolean, default: true },
-      blockedRanges: [
-        {
-          from: { type: Date, required: true },
-          to: { type: Date, required: true },
-          reason: { type: String, trim: true, maxlength: 200 },
-        },
-      ],
+      availableRanges: [rangeSchema],
+      blockedRanges: [rangeSchema],
+      bookedRanges: [rangeSchema],
     },
   },
   { timestamps: true }

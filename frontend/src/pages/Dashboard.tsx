@@ -12,7 +12,6 @@ export default function Dashboard() {
   } = useAppSelector((state) => state.auth);
 
   const [loading, setLoading] = useState(true);
-  // const [error, setError] = useState<string | null>(null); // Uncomment when real API is added
 
   const navigate = useNavigate();
 
@@ -29,7 +28,6 @@ export default function Dashboard() {
         await new Promise((resolve) => setTimeout(resolve, 1200));
       } catch (err) {
         console.error("Failed to load bookings:", err);
-        // setError('Failed to load bookings. Please try again.');
       } finally {
         setLoading(false);
       }

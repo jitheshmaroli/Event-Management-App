@@ -8,8 +8,10 @@ import { ROLES } from '@/constants/roles';
 import { uploadServiceImages } from '@/middlewares/multers3';
 import {
   createServiceSchema,
+  serviceIdSchema,
   updateServiceSchema,
 } from '@/validations/service.validation';
+import { parseMultipartJson } from '@/middlewares/parseMultipartJson';
 
 const router = Router();
 const controller = container.get<ServiceController>(TYPES.ServiceController);
@@ -20,15 +22,22 @@ router.use(authenticate, restrictTo(ROLES.ADMIN));
 router.post(
   '/service',
   uploadServiceImages,
-  validateRequest(createServiceSchema),
+  parseMultipartJson(['availability']),
+  validateRequest(createServiceSchema, 'body'),
   controller.createService.bind(controller)
 );
 router.put(
-  '/service/:id',
+  '/service/:serviceId',
   uploadServiceImages,
-  validateRequest(updateServiceSchema),
+  parseMultipartJson(['availability']),
+  validateRequest(serviceIdSchema, 'params'),
+  validateRequest(updateServiceSchema, 'body'),
   controller.updateService.bind(controller)
 );
-router.delete('/service/:id', controller.deleteService.bind(controller));
+router.delete(
+  '/service/:serviceId',
+  validateRequest(serviceIdSchema, 'params'),
+  controller.deleteService.bind(controller)
+);
 
 export default router;

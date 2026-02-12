@@ -14,4 +14,13 @@ export interface IServiceService {
     services: Array<IService & { signedImages?: string[] }>;
     pagination: { page: number; limit: number; total: number; pages: number };
   }>;
+  getAvailability(
+    id: string,
+    year: number,
+    month: number
+  ): Promise<{
+    availableDates: string[];
+    bookedDates: string[];
+    blockedDates: string[];
+  }>;
 }

@@ -1,12 +1,10 @@
 import { inject, injectable } from 'inversify';
-import { Response, NextFunction } from 'express';
+import { Response, NextFunction, Request } from 'express';
 import { TYPES } from '@/inversify/types';
 import { successResponse } from '@/utils/response';
 import { HTTP_STATUS } from '@/constants/httpStatusCode';
 import { AuthenticatedRequest } from '@/middlewares/auth.middleware';
-import { ServiceQueryParams } from '@/dtos/service/service.dto';
 import { IServiceService } from '@/interfaces/services/IServiceService';
-import { NotFoundError } from '@/utils/errors';
 import { getSignedImageUrls } from '@/utils/s3Utils';
 
 @injectable()
@@ -23,12 +21,6 @@ export class ServiceController {
     try {
       const data = req.body;
       const files = req.files as Express.Multer.File[] | undefined;
-
-      if (typeof data.contactDetails === 'string')
-        data.contactDetails = JSON.parse(data.contactDetails);
-      if (typeof data.availability === 'string')
-        data.availability = JSON.parse(data.availability);
-
       const imageKeys = files?.map((file) => file.key!).filter(Boolean) ?? [];
 
       const service = await this.serviceService.create({
@@ -55,18 +47,12 @@ export class ServiceController {
     next: NextFunction
   ) {
     try {
-      const { id } = req.params;
+      const serviceId = req.params.serviceId as string;
       const data = req.body;
       const files = req.files as Express.Multer.File[] | undefined;
-
-      if (typeof data.contactDetails === 'string')
-        data.contactDetails = JSON.parse(data.contactDetails);
-      if (typeof data.availability === 'string')
-        data.availability = JSON.parse(data.availability);
-
       const imageKeys = files?.map((f) => f.key).filter(Boolean) ?? undefined;
 
-      const updated = await this.serviceService.update(id.toString(), {
+      const updated = await this.serviceService.update(serviceId, {
         ...data,
         images: imageKeys,
       });
@@ -82,13 +68,9 @@ export class ServiceController {
     }
   }
 
-  async getAllServices(
-    req: AuthenticatedRequest,
-    res: Response,
-    next: NextFunction
-  ) {
+  async getAllServices(req: Request, res: Response, next: NextFunction) {
     try {
-      const query = req.query as unknown as ServiceQueryParams;
+      const query = req.query;
       const result = await this.serviceService.findMany(query);
       return successResponse(res, 'Services fetched', result);
     } catch (err) {
@@ -96,16 +78,10 @@ export class ServiceController {
     }
   }
 
-  async getServiceById(
-    req: AuthenticatedRequest,
-    res: Response,
-    next: NextFunction
-  ) {
+  async getServiceById(req: Request, res: Response, next: NextFunction) {
     try {
-      const serviceId = req.params.id;
-      if (!serviceId) {
-        throw new NotFoundError('service id required');
-      }
+      const { serviceId } = req.params;
+
       const service = await this.serviceService.findById(serviceId.toString());
       return successResponse(res, 'Service fetched', service);
     } catch (err) {
@@ -119,11 +95,27 @@ export class ServiceController {
     next: NextFunction
   ) {
     try {
-      await this.serviceService.delete(
-        req.params?.id?.toString(),
-        req.user!.userId
-      );
+      const serviceId = req.params.serviceId as string;
+      const userId = req.user?.userId;
+      await this.serviceService.delete(serviceId, userId!);
       return successResponse(res, 'Service deleted');
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async getAvailability(req: Request, res: Response, next: NextFunction) {
+    try {
+      const serviceId = req.params.serviceId as string;
+      const { year, month } = req.query as { year: string; month: string };
+
+      const result = await this.serviceService.getAvailability(
+        serviceId,
+        parseInt(year, 10),
+        parseInt(month, 10)
+      );
+
+      return successResponse(res, 'Availability fetched', result);
     } catch (err) {
       next(err);
     }

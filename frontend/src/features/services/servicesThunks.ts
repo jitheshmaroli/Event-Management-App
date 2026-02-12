@@ -37,14 +37,8 @@ export const createService = createAsyncThunk(
       formData.append("description", data.description);
       formData.append("pricePerDay", data.pricePerDay.toString());
       formData.append("location", data.location);
-      formData.append("contactDetails", JSON.stringify(data.contactDetails));
-      formData.append(
-        "availability",
-        JSON.stringify({
-          defaultAvailable: data.availability.defaultAvailable,
-          blockedRanges: data.availability.blockedRanges,
-        }),
-      );
+      formData.append("phone", data.phone);
+      formData.append("availability", JSON.stringify(data.availability));
 
       if (data.images && data.images.length > 0) {
         data.images.forEach((file) => {
@@ -81,14 +75,21 @@ export const updateService = createAsyncThunk(
       if (data.location !== undefined)
         formData.append("location", data.location);
 
-      if (data.contactDetails) {
-        formData.append("contactDetails", JSON.stringify(data.contactDetails));
+      if (data.phone) {
+        formData.append("phone", data.phone);
       }
 
       if (data.availability) {
         const cleaned = {
-          defaultAvailable: data.availability.defaultAvailable,
+          availableRanges: data.availability.availableRanges.map(
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            ({ _id, ...rest }) => rest,
+          ),
           blockedRanges: data.availability.blockedRanges.map(
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            ({ _id, ...rest }) => rest,
+          ),
+          bookedRanges: data.availability.bookedRanges.map(
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             ({ _id, ...rest }) => rest,
           ),
@@ -119,6 +120,24 @@ export const deleteService = createAsyncThunk(
       return id;
     } catch {
       return rejectWithValue("Failed to delete service");
+    }
+  },
+);
+
+export const fetchAvailability = createAsyncThunk(
+  "services/fetchAvailability",
+  async (
+    { id, year, month }: { id: string; year: number; month: number },
+    { rejectWithValue },
+  ) => {
+    try {
+      const response = await api.get(`/service/${id}/availability`, {
+        params: { year, month },
+      });
+      console.log("thunk:", response);
+      return { year, month, data: response.data.data };
+    } catch {
+      return rejectWithValue("Failed to load availability");
     }
   },
 );

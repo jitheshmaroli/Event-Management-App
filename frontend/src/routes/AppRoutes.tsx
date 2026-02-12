@@ -34,10 +34,10 @@ export default function AppRoutes() {
       {/* Protected pages with layout */}
       <Route element={<MainLayout />}>
         <Route path="/" element={<Home />} />
-        <Route element={<RoleProtectedRoute allowedRoles={[ROLES.USER]} />}>
-          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/services" element={<ServiceList />} />
           <Route path="/services/:id" element={<ServiceDetail />} />
+        <Route element={<RoleProtectedRoute allowedRoles={[ROLES.USER]} />}>
+          <Route path="/dashboard" element={<Dashboard />} />
         </Route>
 
         <Route element={<RoleProtectedRoute allowedRoles={[ROLES.ADMIN]} />}>

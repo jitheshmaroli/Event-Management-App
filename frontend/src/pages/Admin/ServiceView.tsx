@@ -3,30 +3,32 @@ import { useAppSelector } from "@/hooks/useAppSelector";
 import { ArrowLeft, MapPin, Pencil, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/Button";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useAppDispatch } from "@/hooks/useAppDispatch";
 import {
   deleteService,
   fetchServiceById,
+  fetchAvailability,
 } from "@/features/services/servicesThunks";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import {
-  format,
-  isWithinInterval,
-  parseISO,
-  addMonths,
-  isBefore,
-  startOfDay,
-} from "date-fns";
+import { addMonths, format } from "date-fns";
+import { fromDateKey, toDateKey } from "@/utils/date";
 
 export default function ServiceView() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
 
-  const { currentService, loading } = useAppSelector((state) => state.services);
+  const { currentService, loading, availabilityByMonth } = useAppSelector(
+    (state) => state.services,
+  );
   const [hasAttemptedFetch, setHasAttemptedFetch] = useState(false);
+  const [currentDate, setCurrentDate] = useState(new Date());
+
+  const handleMonthChange = useCallback((date: Date) => {
+    setCurrentDate(date);
+  }, []);
 
   useEffect(() => {
     if (id) {
@@ -35,6 +37,24 @@ export default function ServiceView() {
       });
     }
   }, [id, dispatch]);
+
+  useEffect(() => {
+    if (!id || !hasAttemptedFetch || !currentService) return;
+
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth() + 1;
+    const key = `${year}-${month}`;
+    if (!availabilityByMonth[key]) {
+      dispatch(fetchAvailability({ id, year, month }));
+    }
+  }, [
+    id,
+    hasAttemptedFetch,
+    currentDate,
+    currentService,
+    dispatch,
+    availabilityByMonth,
+  ]);
 
   useEffect(() => {
     if (!id || !hasAttemptedFetch) return;
@@ -76,6 +96,22 @@ export default function ServiceView() {
       return;
     dispatch(deleteService(currentService._id));
     navigate("/admin/services");
+  };
+
+  const getDayClass = (date: Date) => {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth() + 1;
+    const key = `${year}-${month}`;
+    const avail = availabilityByMonth[key];
+    if (!avail) return "";
+
+    const dayStr = toDateKey(date);
+
+    if (avail.bookedDates.includes(dayStr)) return "bg-red-500 text-white";
+    if (avail.availableDates.includes(dayStr)) return "bg-green-500 text-white";
+    if (avail.blockedDates.includes(dayStr)) return "bg-gray-500 text-white";
+
+    return "bg-gray-100 text-gray-400";
   };
 
   return (
@@ -179,21 +215,8 @@ export default function ServiceView() {
                 <h3 className="text-xl font-semibold mb-4">Contact Details</h3>
                 <div className="space-y-3 text-gray-700">
                   <p>
-                    <strong>Phone:</strong>{" "}
-                    {currentService.contactDetails?.phone || "—"}
+                    <strong>Phone:</strong> {currentService.phone || "—"}
                   </p>
-                  {currentService.contactDetails?.whatsapp && (
-                    <p>
-                      <strong>WhatsApp:</strong>{" "}
-                      {currentService.contactDetails.whatsapp}
-                    </p>
-                  )}
-                  {currentService.contactDetails?.email && (
-                    <p>
-                      <strong>Email:</strong>{" "}
-                      {currentService.contactDetails.email}
-                    </p>
-                  )}
                 </div>
               </div>
             </div>
@@ -205,90 +228,111 @@ export default function ServiceView() {
               <h2 className="text-xl font-bold text-gray-900 mb-5 flex items-center gap-2">
                 Availability
                 <span className="text-sm font-normal text-gray-500">
-                  (Red = Unavailable)
+                  (Green=Available, Red=Booked, Gray=Blocked)
                 </span>
               </h2>
 
-              {currentService.availability?.defaultAvailable ? (
-                <div className="space-y-6">
-                  <p className="text-sm text-gray-600 leading-relaxed">
-                    This service is available by default — except for the dates
-                    shown in red.
-                  </p>
+              <DatePicker
+                inline
+                selected={currentDate}
+                onMonthChange={handleMonthChange}
+                minDate={new Date()}
+                maxDate={addMonths(new Date(), 12)}
+                showMonthDropdown
+                showYearDropdown
+                dropdownMode="select"
+                dayClassName={getDayClass}
+              />
 
-                  <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-                    <DatePicker
-                      inline
-                      selectsRange={false}
-                      onChange={() => {}}
-                      minDate={new Date()}
-                      maxDate={addMonths(new Date(), 12)}
-                      showMonthDropdown
-                      showYearDropdown
-                      dropdownMode="select"
-                      dayClassName={(date) => {
-                        const isBlocked =
-                          currentService.availability.blockedRanges.some(
-                            (range) => {
-                              const from = parseISO(range.from);
-                              const to = parseISO(range.to);
-                              return isWithinInterval(date, {
-                                start: from,
-                                end: to,
-                              });
-                            },
-                          );
-
-                        if (isBlocked) {
-                          return "bg-red-600 text-white font-medium rounded-full hover:bg-red-700";
-                        }
-                        if (isBefore(date, startOfDay(new Date()))) {
-                          return "text-gray-300 line-through";
-                        }
-                        return "text-gray-800";
-                      }}
-                      calendarClassName="!w-full"
-                    />
+              {/* Ranges lists */}
+              <div className="mt-8 space-y-6">
+                <div>
+                  <h4 className="text-sm font-medium text-gray-800 mb-3">
+                    Available Periods (
+                    {currentService.availability.availableRanges.length})
+                  </h4>
+                  <div className="space-y-2.5">
+                    {currentService.availability.availableRanges.map(
+                      (range, idx) => (
+                        <div
+                          key={idx}
+                          className="flex items-center bg-green-50 border border-green-100 rounded-lg px-4 py-2.5 text-sm"
+                        >
+                          <span className="font-medium text-green-800">
+                            {format(fromDateKey(range.from), "dd MMM yyyy")} –{" "}
+                            {format(fromDateKey(range.to), "dd MMM yyyy")}
+                          </span>
+                          {range.reason && (
+                            <span className="ml-3 text-green-600 text-xs italic">
+                              ({range.reason})
+                            </span>
+                          )}
+                        </div>
+                      ),
+                    )}
+                    {currentService.availability.availableRanges.length ===
+                      0 && (
+                      <p className="text-sm text-gray-500 italic">
+                        Always available (no specific periods defined)
+                      </p>
+                    )}
                   </div>
+                </div>
 
-                  {currentService.availability.blockedRanges.length > 0 && (
-                    <div className="mt-5">
-                      <h4 className="text-sm font-medium text-gray-800 mb-3">
-                        Blocked Periods
-                      </h4>
-                      <div className="space-y-2.5">
-                        {currentService.availability.blockedRanges.map(
-                          (range, idx) => (
-                            <div
-                              key={idx}
-                              className="flex items-center bg-red-50 border border-red-100 rounded-lg px-4 py-2.5 text-sm"
-                            >
-                              <span className="font-medium text-red-800">
-                                {format(parseISO(range.from), "dd MMM yyyy")} –{" "}
-                                {format(parseISO(range.to), "dd MMM yyyy")}
-                              </span>
-                              {range.reason && (
-                                <span className="ml-3 text-red-600 text-xs italic">
-                                  ({range.reason})
-                                </span>
-                              )}
-                            </div>
-                          ),
-                        )}
-                      </div>
-                    </div>
-                  )}
+                <div>
+                  <h4 className="text-sm font-medium text-gray-800 mb-3">
+                    Blocked Periods (
+                    {currentService.availability.blockedRanges.length})
+                  </h4>
+                  <div className="space-y-2.5">
+                    {currentService.availability.blockedRanges.map(
+                      (range, idx) => (
+                        <div
+                          key={idx}
+                          className="flex items-center bg-gray-50 border border-gray-100 rounded-lg px-4 py-2.5 text-sm"
+                        >
+                          <span className="font-medium text-gray-800">
+                            {format(fromDateKey(range.from), "dd MMM yyyy")} –{" "}
+                            {format(fromDateKey(range.to), "dd MMM yyyy")}
+                          </span>
+                          {range.reason && (
+                            <span className="ml-3 text-gray-600 text-xs italic">
+                              ({range.reason})
+                            </span>
+                          )}
+                        </div>
+                      ),
+                    )}
+                  </div>
                 </div>
-              ) : (
-                <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 text-center">
-                  <p className="text-amber-800 font-medium">
-                    Available only on specific dates
-                  </p>
-                  <p className="text-sm text-amber-700 mt-2">
-                    No availability periods have been defined yet.
-                  </p>
+
+                <div>
+                  <h4 className="text-sm font-medium text-gray-800 mb-3">
+                    Booked Periods (
+                    {currentService.availability.bookedRanges.length})
+                  </h4>
+                  <div className="space-y-2.5">
+                    {currentService.availability.bookedRanges.map(
+                      (range, idx) => (
+                        <div
+                          key={idx}
+                          className="flex items-center bg-red-50 border border-red-100 rounded-lg px-4 py-2.5 text-sm"
+                        >
+                          <span className="font-medium text-red-800">
+                            {format(fromDateKey(range.from), "dd MMM yyyy")} –{" "}
+                            {format(fromDateKey(range.to), "dd MMM yyyy")}
+                          </span>
+                          {range.reason && (
+                            <span className="ml-3 text-red-600 text-xs italic">
+                              ({range.reason})
+                            </span>
+                          )}
+                        </div>
+                      ),
+                    )}
+                  </div>
                 </div>
-              )}
+              </div>
 
               {/* Timestamps */}
               <div className="mt-8 pt-6 border-t border-gray-100 text-xs text-gray-500 text-center">

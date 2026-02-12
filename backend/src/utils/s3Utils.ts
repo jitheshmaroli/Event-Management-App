@@ -2,6 +2,7 @@ import { GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { s3Client } from '@/utils/s3';
 import { env } from '@/config/env.config';
+import logger from './logger';
 
 const BUCKET_NAME = env.S3_BUCKET_NAME!;
 
@@ -21,7 +22,7 @@ export async function getSignedImageUrl(
       expiresIn: expiresInSeconds,
     });
   } catch (err) {
-    console.error(`Failed to sign URL for key ${key}:`, err);
+    logger.error(`Failed to sign URL for key ${key}:`, err);
     return '';
   }
 }

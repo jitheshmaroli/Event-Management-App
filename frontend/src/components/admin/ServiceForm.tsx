@@ -2,16 +2,21 @@ import { useState } from "react";
 import {
   SERVICE_CATEGORIES,
   type ServiceFormData,
-  type BlockedRange,
+  type Range,
 } from "@/types/service";
 import { Input } from "../ui/Input";
 import { Textarea } from "../ui/TextArea";
 import ServiceImageUploader from "./ServiceImageUploader";
 import { Button } from "../ui/Button";
-
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { addMonths, format, isBefore, startOfDay } from "date-fns";
+import {
+  fromDateKey,
+  isInRange,
+  normalizeDateString,
+  toDateKey,
+} from "@/utils/date";
 
 interface Props {
   initialData?: Partial<ServiceFormData>;
@@ -24,17 +29,44 @@ export default function ServiceForm({
   onSubmit,
   isLoading = false,
 }: Props) {
+  const normalizeRanges = (ranges: Range[]) =>
+    ranges.map((r) => ({
+      ...r,
+      from: normalizeDateString(r.from),
+      to: normalizeDateString(r.to),
+    }));
+
+  const safeFormat = (dateStr: string) => {
+    const d = fromDateKey(dateStr);
+    return isNaN(d.getTime()) ? "Invalid date" : format(d, "dd MMM yyyy");
+  };
+
+  const normalizedInitialAvailability = initialData.availability
+    ? {
+        availableRanges: normalizeRanges(
+          initialData.availability.availableRanges || [],
+        ),
+        blockedRanges: normalizeRanges(
+          initialData.availability.blockedRanges || [],
+        ),
+        bookedRanges: normalizeRanges(
+          initialData.availability.bookedRanges || [],
+        ),
+      }
+    : {
+        availableRanges: [],
+        blockedRanges: [],
+        bookedRanges: [],
+      };
+
   const [form, setForm] = useState<ServiceFormData>({
     title: "",
-    category: "",
+    category: "venue",
     description: "",
     pricePerDay: 0,
     location: "",
-    contactDetails: { phone: "" },
-    availability: {
-      defaultAvailable: true,
-      blockedRanges: [],
-    },
+    phone: "",
+    availability: normalizedInitialAvailability,
     images: [],
     ...initialData,
   });
@@ -45,66 +77,125 @@ export default function ServiceForm({
   ]);
 
   const [newRangeReason, setNewRangeReason] = useState<string>("");
+  const [rangeType, setRangeType] = useState<
+    "available" | "blocked" | "booked"
+  >("available");
   const [feedback, setFeedback] = useState<{
     type: "success" | "error";
     message: string;
   } | null>(null);
 
-  // Merge overlapping or adjacent ranges
-  const mergeBlockedRanges = (ranges: BlockedRange[]): BlockedRange[] => {
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+
+  const mergeRanges = (ranges: Range[]): Range[] => {
     if (ranges.length === 0) return [];
 
     const sorted = [...ranges].sort((a, b) => a.from.localeCompare(b.from));
-    const merged: BlockedRange[] = [sorted[0]];
+    const merged: Range[] = [{ ...sorted[0] }];
 
     for (let i = 1; i < sorted.length; i++) {
-      const curr = sorted[i];
+      const curr = { ...sorted[i] };
       const last = merged[merged.length - 1];
 
       if (curr.from <= last.to) {
-        last.to = curr.to > last.to ? curr.to : last.to;
-        if (curr.reason && !last.reason) last.reason = curr.reason;
+        merged[merged.length - 1] = {
+          ...last,
+          to: curr.to > last.to ? curr.to : last.to,
+          reason: last.reason || curr.reason,
+        };
       } else {
         merged.push(curr);
       }
     }
+
     return merged;
   };
 
-  // Add new blocked range with validation
-  const addBlockedRange = (from: string, to: string, reason?: string) => {
-    if (!from || !to || isBefore(new Date(to), new Date(from))) {
-      setFeedback({
-        type: "error",
-        message: "End date must be after or equal to start date.",
-      });
+  const addOrUpdateRange = (from: string, to: string, reason?: string) => {
+    if (!from || !to || isBefore(fromDateKey(to), fromDateKey(from))) {
+      setFeedback({ type: "error", message: "Invalid range." });
       return;
     }
 
-    if (isBefore(startOfDay(new Date(from)), startOfDay(new Date()))) {
-      setFeedback({ type: "error", message: "Cannot block past dates." });
+    if (isBefore(startOfDay(fromDateKey(from)), startOfDay(new Date()))) {
+      setFeedback({ type: "error", message: "No past dates." });
       return;
+    }
+
+    if (rangeType !== "booked") {
+      const newInterval = { start: fromDateKey(from), end: fromDateKey(to) };
+      const overlapsBooked = form.availability.bookedRanges.some((r) => {
+        const rStart = fromDateKey(r.from);
+        const rEnd = fromDateKey(r.to);
+        return newInterval.start <= rEnd && newInterval.end >= rStart;
+      });
+
+      if (overlapsBooked) {
+        setFeedback({
+          type: "error",
+          message: "Cannot overlap booked ranges.",
+        });
+        return;
+      }
     }
 
     setForm((prev) => {
-      const newRanges = [
-        ...prev.availability.blockedRanges,
-        { from, to, reason: reason?.trim() || undefined },
-      ];
+      const updatedRanges = [...prev.availability[`${rangeType}Ranges`]];
+      const newRange = { from, to, reason: reason?.trim() || undefined };
+
+      if (editingIndex !== null) {
+        updatedRanges[editingIndex] = newRange;
+      } else {
+        updatedRanges.push(newRange);
+      }
 
       return {
         ...prev,
         availability: {
           ...prev.availability,
-          blockedRanges: mergeBlockedRanges(newRanges),
+          [`${rangeType}Ranges`]: mergeRanges(updatedRanges),
         },
       };
     });
 
+    resetTemp();
+    setFeedback({
+      type: "success",
+      message: `${editingIndex !== null ? "Updated" : "Added"} ${rangeType} period.`,
+    });
+    setTimeout(() => setFeedback(null), 4000);
+  };
+
+  const resetTemp = () => {
     setTempRange([null, null]);
     setNewRangeReason("");
-    setFeedback({ type: "success", message: "Blocked period added." });
-    setTimeout(() => setFeedback(null), 4000);
+    setEditingIndex(null);
+  };
+
+  const editRange = (
+    type: "available" | "blocked" | "booked",
+    index: number,
+  ) => {
+    const range = form.availability[`${type}Ranges`][index];
+    setTempRange([fromDateKey(range.from), fromDateKey(range.to)]);
+    setNewRangeReason(range.reason || "");
+    setRangeType(type);
+    setEditingIndex(index);
+  };
+
+  const removeRange = (
+    type: "available" | "blocked" | "booked",
+    index: number,
+  ) => {
+    setForm((prev) => ({
+      ...prev,
+      availability: {
+        ...prev.availability,
+        [`${type}Ranges`]: prev.availability[`${type}Ranges`].filter(
+          (_, i) => i !== index,
+        ),
+      },
+    }));
   };
 
   const handleChange = (
@@ -113,20 +204,36 @@ export default function ServiceForm({
     >,
   ) => {
     const { name, value } = e.target;
-    if (name.includes("contactDetails.")) {
-      const field = name.split(".")[1];
-      setForm((prev) => ({
-        ...prev,
-        contactDetails: { ...prev.contactDetails, [field]: value },
-      }));
-    } else {
-      setForm((prev) => ({ ...prev, [name]: value }));
-    }
+
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit(form);
+  };
+
+  const getDayClass = (date: Date) => {
+    const dStr = toDateKey(date);
+
+    if (
+      form.availability.bookedRanges.some((r) => isInRange(dStr, r.from, r.to))
+    )
+      return "bg-red-200";
+
+    if (
+      form.availability.availableRanges.some((r) =>
+        isInRange(dStr, r.from, r.to),
+      )
+    )
+      return "bg-green-200";
+
+    if (
+      form.availability.blockedRanges.some((r) => isInRange(dStr, r.from, r.to))
+    )
+      return "bg-gray-200";
+
+    return "";
   };
 
   return (
@@ -193,120 +300,22 @@ export default function ServiceForm({
 
       <div>
         <label className="block text-sm font-medium">Phone</label>
-        <Input
-          name="contactDetails.phone"
-          value={form.contactDetails.phone}
-          onChange={handleChange}
-        />
+        <Input name="phone" value={form.phone} onChange={handleChange} />
       </div>
 
       {/* AVAILABILITY SECTION */}
       <div className="space-y-6 border-t pt-6">
         <div>
           <h3 className="text-lg font-medium text-gray-900">
-            When can customers book this service?
+            Availability Settings
           </h3>
           <p className="mt-2 text-sm text-gray-600">
-            Choose how you want to control availability.
-            <strong>Most services should use the first option</strong>.
+            Ranges are inclusive (includes start/end dates). If no available
+            periods, always available minus blocks/bookings.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div
-            className={`border-2 rounded-xl p-5 cursor-pointer transition-all ${
-              form.availability.defaultAvailable
-                ? "border-indigo-600 bg-indigo-50 shadow-sm"
-                : "border-gray-200 hover:border-gray-300 bg-white"
-            }`}
-            onClick={() =>
-              setForm((p) => ({
-                ...p,
-                availability: { ...p.availability, defaultAvailable: true },
-              }))
-            }
-          >
-            <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 mt-1">
-                <input
-                  type="radio"
-                  checked={form.availability.defaultAvailable}
-                  readOnly
-                  className="h-5 w-5 text-indigo-600"
-                />
-              </div>
-              <div>
-                <h4 className="font-medium text-gray-900 text-base">
-                  Available every day unless I block it
-                </h4>
-                <p className="text-sm text-gray-600 mt-1">
-                  Customers can book <strong>any date</strong> in the future — I
-                  only need to block days when I'm unavailable (maintenance,
-                  holidays, already booked, etc.).
-                </p>
-                <p className="text-xs text-indigo-700 mt-2 font-medium">
-                  Recommended for venues, catering, halls, photographers, most
-                  services
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div
-            className={`border-2 rounded-xl p-5 cursor-pointer transition-all ${
-              !form.availability.defaultAvailable
-                ? "border-indigo-600 bg-indigo-50 shadow-sm"
-                : "border-gray-200 hover:border-gray-300 bg-white"
-            }`}
-            onClick={() =>
-              setForm((p) => ({
-                ...p,
-                availability: { ...p.availability, defaultAvailable: false },
-              }))
-            }
-          >
-            <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 mt-1">
-                <input
-                  type="radio"
-                  checked={!form.availability.defaultAvailable}
-                  readOnly
-                  className="h-5 w-5 text-indigo-600"
-                />
-              </div>
-              <div>
-                <h4 className="font-medium text-gray-900 text-base">
-                  Unavailable unless I add available periods
-                </h4>
-                <p className="text-sm text-gray-600 mt-1">
-                  Customers <strong>cannot book</strong> any date unless I
-                  explicitly add periods when I'm available.
-                </p>
-                <p className="text-xs text-gray-500 mt-2">
-                  Used by freelancers or services with very limited schedule
-                  (rare case)
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="text-sm text-gray-700 bg-gray-50 p-3 rounded-lg border border-gray-200">
-          <strong>Current setting:</strong>{" "}
-          {form.availability.defaultAvailable ? (
-            <span className="text-green-700">
-              Service is available every day — you only need to block
-              unavailable dates.
-            </span>
-          ) : (
-            <span className="text-amber-700">
-              Service is unavailable by default — you must add specific periods
-              when it's available.
-            </span>
-          )}
-        </div>
-
-        {/* Feedback message */}
+        {/* Feedback */}
         {feedback && (
           <div
             className={`p-3 rounded border ${
@@ -322,23 +331,9 @@ export default function ServiceForm({
         {/* Calendar */}
         <div className="border rounded-lg overflow-hidden bg-white shadow-sm">
           <div className="p-4 border-b bg-gray-50">
-            <h4 className="font-medium text-gray-900">
-              {form.availability.defaultAvailable
-                ? "Block dates when this service is NOT available"
-                : "Add dates when this service IS available"}
-            </h4>
+            <h4 className="font-medium text-gray-900">Select Period to Add</h4>
             <p className="text-sm text-gray-600 mt-1">
-              {form.availability.defaultAvailable ? (
-                <>
-                  Click and drag to select a period → optional reason → click
-                  "Block this period"
-                </>
-              ) : (
-                <>
-                  Click and drag to select a period when you ARE available →
-                  optional note → click "Add available period"
-                </>
-              )}
+              Click and drag to select → optional reason → choose type → add
             </p>
           </div>
 
@@ -351,14 +346,7 @@ export default function ServiceForm({
               onChange={(update) => setTempRange(update)}
               minDate={startOfDay(new Date())}
               maxDate={addMonths(new Date(), 12)}
-              dayClassName={(date) => {
-                const dStr = format(date, "yyyy-MM-dd");
-                return form.availability.blockedRanges.some(
-                  (r) => dStr >= r.from && dStr <= r.to,
-                )
-                  ? "highlighted-custom"
-                  : "";
-              }}
+              dayClassName={getDayClass}
             />
           </div>
 
@@ -367,33 +355,39 @@ export default function ServiceForm({
               <div className="flex flex-col sm:flex-row gap-4 items-end">
                 <div className="flex-1">
                   <p className="text-sm font-medium mb-1">
-                    {form.availability.defaultAvailable
-                      ? "Block"
-                      : "Add available"}{" "}
-                    period: {format(tempRange[0], "dd MMM yyyy")} →{" "}
-                    {format(tempRange[1], "dd MMM yyyy")}
+                    Period: {format(tempRange[0], "dd MMM yyyy")} →{" "}
+                    {format(tempRange[1], "dd MMM yyyy")} (inclusive)
                   </p>
-                  <Input
-                    value={newRangeReason}
-                    onChange={(e) => setNewRangeReason(e.target.value)}
-                    placeholder={
-                      form.availability.defaultAvailable
-                        ? "Reason (optional) – e.g. Maintenance, Already booked"
-                        : "Note (optional) – e.g. Wedding photography slot"
-                    }
-                    className="mt-1"
-                  />
+                  {rangeType !== "available" && (
+                    <Input
+                      value={newRangeReason}
+                      onChange={(e) => setNewRangeReason(e.target.value)}
+                      placeholder="Reason/Note (optional)"
+                      className="mt-1"
+                    />
+                  )}
                 </div>
+
+                <select
+                  value={rangeType}
+                  onChange={(e) =>
+                    setRangeType(
+                      e.target.value as "available" | "blocked" | "booked",
+                    )
+                  }
+                  className="border rounded p-2"
+                >
+                  <option value="available">Available (Green)</option>
+                  <option value="blocked">Blocked (Gray)</option>
+                  <option value="booked">Booked (Red)</option>
+                </select>
 
                 <div className="flex gap-2">
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() => {
-                      setTempRange([null, null]);
-                      setNewRangeReason("");
-                    }}
+                    onClick={resetTemp}
                   >
                     Cancel
                   </Button>
@@ -401,16 +395,14 @@ export default function ServiceForm({
                     type="button"
                     size="sm"
                     onClick={() =>
-                      addBlockedRange(
-                        format(tempRange[0]!, "yyyy-MM-dd"),
-                        format(tempRange[1]!, "yyyy-MM-dd"),
+                      addOrUpdateRange(
+                        toDateKey(tempRange[0]!),
+                        toDateKey(tempRange[1]!),
                         newRangeReason.trim() || undefined,
                       )
                     }
                   >
-                    {form.availability.defaultAvailable
-                      ? "Block this period"
-                      : "Add available period"}
+                    {editingIndex !== null ? "Update" : "Add"} Period
                   </Button>
                 </div>
               </div>
@@ -418,66 +410,60 @@ export default function ServiceForm({
           )}
         </div>
 
-        {/* Blocked ranges list */}
-        {form.availability.blockedRanges.length > 0 && (
-          <div className="mt-6">
-            <div className="flex justify-between items-center mb-3">
-              <h4 className="text-sm font-medium text-gray-900">
-                {form.availability.defaultAvailable
-                  ? "Blocked periods"
-                  : "Available periods"}{" "}
-                ({form.availability.blockedRanges.length})
-              </h4>
-              <button
-                type="button"
-                className="text-sm text-red-600 hover:text-red-800 underline"
-                onClick={() => {
-                  if (window.confirm("Remove all periods?")) {
-                    setForm((p) => ({
-                      ...p,
-                      availability: { ...p.availability, blockedRanges: [] },
-                    }));
-                    setFeedback({
-                      type: "success",
-                      message: "All periods removed.",
-                    });
-                  }
-                }}
-              >
-                Clear all
-              </button>
+        {/* Ranges lists - with edit */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div>
+            <h4 className="text-sm font-medium text-gray-800 mb-3">
+              Available Periods ({form.availability.availableRanges.length})
+            </h4>
+            <div className="space-y-2 max-h-48 overflow-y-auto">
+              {form.availability.availableRanges.map((range, idx) => (
+                <div
+                  key={idx}
+                  className="bg-green-50 p-2 rounded flex justify-between text-sm items-center"
+                >
+                  <span
+                    onClick={() => editRange("available", idx)}
+                    className="cursor-pointer"
+                  >
+                    {safeFormat(range.from)} - {safeFormat(range.to)}{" "}
+                    {range.reason ? `(${range.reason})` : ""}
+                  </span>
+                  <button
+                    onClick={() => removeRange("available", idx)}
+                    className="text-red-500"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+              {form.availability.availableRanges.length === 0 && (
+                <p className="text-xs text-gray-500">Always available</p>
+              )}
             </div>
+          </div>
 
-            <div className="space-y-2 max-h-64 overflow-y-auto pr-2">
+          <div>
+            <h4 className="text-sm font-medium text-gray-800 mb-3">
+              Blocked Periods ({form.availability.blockedRanges.length})
+            </h4>
+            <div className="space-y-2 max-h-48 overflow-y-auto">
               {form.availability.blockedRanges.map((range, idx) => (
                 <div
                   key={idx}
-                  className="flex justify-between items-center bg-red-50 px-4 py-2.5 rounded-lg border border-red-100 text-sm"
+                  className="bg-gray-50 p-2 rounded flex justify-between text-sm items-center"
                 >
-                  <div>
-                    <span className="font-medium">
-                      {range.from} → {range.to}
-                    </span>
-                    {range.reason && (
-                      <span className="ml-3 text-red-700 text-xs">
-                        ({range.reason})
-                      </span>
-                    )}
-                  </div>
+                  <span
+                    onClick={() => editRange("blocked", idx)}
+                    className="cursor-pointer"
+                  >
+                    {format(fromDateKey(range.from), "dd MMM yyyy")} -{" "}
+                    {format(fromDateKey(range.to), "dd MMM yyyy")}{" "}
+                    {range.reason ? `(${range.reason})` : ""}
+                  </span>
                   <button
-                    type="button"
-                    className="text-red-600 hover:text-red-800 text-xs font-medium"
-                    onClick={() =>
-                      setForm((p) => ({
-                        ...p,
-                        availability: {
-                          ...p.availability,
-                          blockedRanges: p.availability.blockedRanges.filter(
-                            (_, i) => i !== idx,
-                          ),
-                        },
-                      }))
-                    }
+                    onClick={() => removeRange("blocked", idx)}
+                    className="text-red-500"
                   >
                     Remove
                   </button>
@@ -485,13 +471,36 @@ export default function ServiceForm({
               ))}
             </div>
           </div>
-        )}
 
-        <p className="text-xs text-gray-500">
-          {form.availability.defaultAvailable
-            ? "Red dates = cannot be booked"
-            : "Red dates = can be booked"}
-        </p>
+          <div>
+            <h4 className="text-sm font-medium text-gray-800 mb-3">
+              Booked Periods ({form.availability.bookedRanges.length})
+            </h4>
+            <div className="space-y-2 max-h-48 overflow-y-auto">
+              {form.availability.bookedRanges.map((range, idx) => (
+                <div
+                  key={idx}
+                  className="bg-red-50 p-2 rounded flex justify-between text-sm items-center"
+                >
+                  <span
+                    onClick={() => editRange("booked", idx)}
+                    className="cursor-pointer"
+                  >
+                    {format(fromDateKey(range.from), "dd MMM yyyy")} -{" "}
+                    {format(fromDateKey(range.to), "dd MMM yyyy")}{" "}
+                    {range.reason ? `(${range.reason})` : ""}
+                  </span>
+                  <button
+                    onClick={() => removeRange("booked", idx)}
+                    className="text-red-500"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Image uploader */}

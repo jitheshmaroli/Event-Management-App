@@ -1,4 +1,3 @@
-// F:\Event-Management\frontend\src\pages\Home.tsx
 import { Link, useNavigate } from "react-router-dom";
 import {
   Search,

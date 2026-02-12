@@ -15,10 +15,14 @@ export class ServiceRepository implements IServiceRepository {
     id: string,
     update: Partial<IService>
   ): Promise<IService | null> {
-    return Service.findByIdAndUpdate(id, update, {
-      new: true,
-      runValidators: true,
-    }).lean();
+    return Service.findByIdAndUpdate(
+      id,
+      { $set: update },
+      {
+        new: true,
+        runValidators: true,
+      }
+    ).lean();
   }
 
   async deleteById(id: string): Promise<boolean> {

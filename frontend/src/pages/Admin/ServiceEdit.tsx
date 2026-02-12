@@ -17,6 +17,7 @@ export default function ServiceEdit() {
 
   const { currentService, loading } = useAppSelector((state) => state.services);
   const [hasAttemptedFetch, setHasAttemptedFetch] = useState(false);
+  
   useEffect(() => {
     if (id) {
       dispatch(fetchServiceById(id)).finally(() => {
@@ -55,7 +56,7 @@ export default function ServiceEdit() {
     description: currentService.description,
     pricePerDay: currentService.pricePerDay,
     location: currentService.location,
-    contactDetails: currentService.contactDetails,
+    phone: currentService.phone,
     availability: currentService.availability,
     existingImages: currentService.signedImages,
     images: [],

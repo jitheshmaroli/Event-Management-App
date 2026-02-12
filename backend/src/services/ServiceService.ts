@@ -11,6 +11,12 @@ import { NotFoundError } from '@/utils/errors';
 import { getSignedImageUrls } from '@/utils/s3Utils';
 import { inject, injectable } from 'inversify';
 import { QueryFilter } from 'mongoose';
+import { isWithinInterval } from 'date-fns';
+import {
+  normalizeRanges,
+  toDateString,
+  toUtcMidnight,
+} from '@/utils/date.utils';
 
 @injectable()
 export class ServiceService implements IServiceService {
@@ -19,18 +25,14 @@ export class ServiceService implements IServiceService {
   ) {}
 
   async create(data: CreateServiceInput): Promise<IService> {
-    const blockedRanges = data.availability.blockedRanges.map((r) => ({
-      from: new Date(r.from),
-      to: new Date(r.to),
-      reason: r.reason,
-    }));
-    console.log(data);
+    const { availability } = data;
 
     return this.serviceRepo.create({
       ...data,
       availability: {
-        defaultAvailable: data.availability.defaultAvailable,
-        blockedRanges,
+        availableRanges: normalizeRanges(availability?.availableRanges),
+        blockedRanges: normalizeRanges(availability?.blockedRanges),
+        bookedRanges: normalizeRanges(availability?.bookedRanges),
       },
       images: data.images ?? [],
     });
@@ -49,21 +51,13 @@ export class ServiceService implements IServiceService {
     if (data.pricePerDay !== undefined)
       updateData.pricePerDay = data.pricePerDay;
     if (data.location !== undefined) updateData.location = data.location;
+    if (data.phone !== undefined) updateData.phone = data.phone;
 
-    if (data.contactDetails) {
-      updateData.contactDetails = {
-        ...service.contactDetails,
-        ...data.contactDetails,
-      };
-    }
     if (data.availability) {
       updateData.availability = {
-        defaultAvailable: data.availability.defaultAvailable,
-        blockedRanges: data.availability.blockedRanges.map((r) => ({
-          from: new Date(r.from),
-          to: new Date(r.to),
-          reason: r.reason,
-        })),
+        availableRanges: normalizeRanges(data.availability.availableRanges),
+        blockedRanges: normalizeRanges(data.availability.blockedRanges),
+        bookedRanges: normalizeRanges(data.availability.bookedRanges),
       };
     }
 
@@ -114,15 +108,14 @@ export class ServiceService implements IServiceService {
     }
 
     if (date) {
-      const target = new Date(date);
-      target.setHours(0, 0, 0, 0);
+      const target = toUtcMidnight(date);
 
-      filter.$or = [
+      filter.$and = [
         {
-          'availability.defaultAvailable': true,
-          $nor: [
+          $or: [
+            { 'availability.availableRanges.0': { $exists: false } },
             {
-              'availability.blockedRanges': {
+              'availability.availableRanges': {
                 $elemMatch: {
                   from: { $lte: target },
                   to: { $gte: target },
@@ -130,6 +123,26 @@ export class ServiceService implements IServiceService {
               },
             },
           ],
+        },
+        {
+          'availability.blockedRanges': {
+            $not: {
+              $elemMatch: {
+                from: { $lte: target },
+                to: { $gte: target },
+              },
+            },
+          },
+        },
+        {
+          'availability.bookedRanges': {
+            $not: {
+              $elemMatch: {
+                from: { $lte: target },
+                to: { $gte: target },
+              },
+            },
+          },
         },
       ];
     }
@@ -181,5 +194,72 @@ export class ServiceService implements IServiceService {
     if (!service) throw new NotFoundError('Service not found');
 
     await this.serviceRepo.deleteById(id);
+  }
+
+  async getAvailability(
+    id: string,
+    year: number,
+    month: number
+  ): Promise<{
+    availableDates: string[];
+    bookedDates: string[];
+    blockedDates: string[];
+  }> {
+    const service = await this.serviceRepo.findById(id);
+    if (!service) throw new NotFoundError('Service not found');
+
+    const start = new Date(Date.UTC(year, month - 1, 1));
+    const end = new Date(Date.UTC(year, month, 0));
+
+    const availableRanges = service.availability.availableRanges || [];
+    const blockedRanges = service.availability.blockedRanges || [];
+    const bookedRanges = service.availability.bookedRanges || [];
+    const hasAvailableRanges = availableRanges.length > 0;
+
+    const availableDates: string[] = [];
+    const bookedDates: string[] = [];
+    const blockedDates: string[] = [];
+
+    for (
+      let d = new Date(start);
+      d <= end;
+      d = new Date(
+        Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + 1)
+      )
+    ) {
+      const dayMidnight = new Date(
+        Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())
+      );
+
+      const dayStr = toDateString(dayMidnight);
+
+      const isBooked = bookedRanges.some((r) =>
+        isWithinInterval(dayMidnight, { start: r.from, end: r.to })
+      );
+      if (isBooked) {
+        bookedDates.push(dayStr);
+        continue;
+      }
+
+      const isBlocked = blockedRanges.some((r) =>
+        isWithinInterval(dayMidnight, { start: r.from, end: r.to })
+      );
+      if (isBlocked) {
+        blockedDates.push(dayStr);
+        continue;
+      }
+
+      const isAvailable =
+        !hasAvailableRanges ||
+        availableRanges.some((r) =>
+          isWithinInterval(dayMidnight, { start: r.from, end: r.to })
+        );
+
+      if (isAvailable) {
+        availableDates.push(dayStr);
+      }
+    }
+
+    return { availableDates, bookedDates, blockedDates };
   }
 }

@@ -8,15 +8,18 @@ import { Pencil, Trash2, Eye } from "lucide-react";
 import { useAppDispatch } from "@/hooks/useAppDispatch";
 import { useAppSelector } from "@/hooks/useAppSelector";
 import { Button } from "@/components/ui/Button";
+import { PAGINATION } from "@/constants/pagination";
 
-export default function ServicesList() {
+const limit = PAGINATION.MAX_LIMIT;
+const defaultPage = PAGINATION.DEFAULT_PAGE;
+
+export default function ServiceList() {
   const dispatch = useAppDispatch();
   const { services, loading, pagination } = useAppSelector(
     (state) => state.services,
   );
 
-  const [page, setPage] = useState(1);
-  const limit = 12;
+  const [page, setPage] = useState(defaultPage);
 
   useEffect(() => {
     dispatch(fetchServices({ page, limit }));

@@ -1,8 +1,9 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
-import type { Service } from "@/types/service";
+import type { MonthAvailability, Service } from "@/types/service";
 import {
   createService,
   deleteService,
+  fetchAvailability,
   fetchServiceById,
   fetchServices,
   updateService,
@@ -17,6 +18,7 @@ interface ServicesState {
     total: number;
     pages: number;
   } | null;
+  availabilityByMonth: Record<string, MonthAvailability>;
   loading: boolean;
   error: string | null;
 }
@@ -25,6 +27,7 @@ const initialState: ServicesState = {
   services: [],
   currentService: null,
   pagination: null,
+  availabilityByMonth: {},
   loading: false,
   error: null,
 };
@@ -86,6 +89,20 @@ const servicesSlice = createSlice({
         state.currentService = action.payload;
       })
       .addCase(fetchServiceById.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+
+      // fetch availability
+      .addCase(fetchAvailability.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchAvailability.fulfilled, (state, action) => {
+        state.loading = false;
+        const key = `${action.payload.year}-${action.payload.month}`;
+        state.availabilityByMonth[key] = action.payload.data;
+      })
+      .addCase(fetchAvailability.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });

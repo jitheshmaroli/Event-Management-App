@@ -1,6 +1,8 @@
+import { ServiceCategory } from '@/constants/service.constants';
+
 export interface ServiceQueryParams {
   search?: string;
-  category?: string;
+  category?: ServiceCategory;
   location?: string;
   minPrice?: number;
   maxPrice?: number;
@@ -10,43 +12,36 @@ export interface ServiceQueryParams {
   sort?: string;
 }
 
-export interface BlockedRangeInput {
+export interface RangeInput {
   from: string;
   to: string;
   reason?: string;
 }
 
 export interface AvailabilityInput {
-  defaultAvailable: boolean;
-  blockedRanges: BlockedRangeInput[];
+  availableRanges?: RangeInput[];
+  blockedRanges?: RangeInput[];
+  bookedRanges?: RangeInput[];
 }
 
 export interface CreateServiceInput {
   title: string;
-  category: string;
+  category: ServiceCategory;
   description: string;
   pricePerDay: number;
   location: string;
   images?: string[];
-  contactDetails: {
-    phone: string;
-    email?: string;
-    whatsapp?: string;
-  };
+  phone: string;
   availability: AvailabilityInput;
 }
 
 export interface UpdateServiceInput {
   title?: string;
-  category?: string;
+  category?: ServiceCategory;
   description?: string;
   pricePerDay?: number;
   location?: string;
   images?: string[];
-  contactDetails?: {
-    phone?: string;
-    email?: string;
-    whatsapp?: string;
-  };
+  phone?: string;
   availability?: AvailabilityInput;
 }

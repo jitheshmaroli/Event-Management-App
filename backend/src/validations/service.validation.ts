@@ -1,72 +1,57 @@
-import { SERVICE_CATEGORIES } from '@/constants/service';
+import { SERVICE_CATEGORIES } from '@/constants/service.constants';
 import Joi from 'joi';
 
 export const createServiceSchema = Joi.object({
-  title: Joi.string().min(5).max(120).trim().required(),
+  title: Joi.string().min(1).max(120).trim().required(),
+
   category: Joi.string()
-    .valid(...SERVICE_CATEGORIES)
+    .valid(...SERVICE_CATEGORIES.map((c) => c.value))
     .required()
     .lowercase(),
-  description: Joi.string().min(20).max(3000).trim().required(),
-  pricePerDay: Joi.number().min(500).required(),
-  location: Joi.string().min(3).max(100).trim().required(),
 
-  contactDetails: Joi.string()
-    .custom((value, helpers) => {
-      try {
-        const parsed = JSON.parse(value);
-        const { error } = Joi.object({
-          phone: Joi.string()
-            .pattern(/^[6-9]\d{9}$/)
-            .required(),
-          email: Joi.string().email().allow(''),
-          whatsapp: Joi.string()
-            .pattern(/^[6-9]\d{9}$/)
-            .allow(''),
-        }).validate(parsed, { abortEarly: false });
+  description: Joi.string().min(1).max(3000).trim().required(),
 
-        if (error)
-          return helpers.error('any.invalid', {
-            message: error.details[0].message,
-          });
-        return parsed;
-      } catch {
-        return helpers.error('any.invalid', {
-          message: 'Invalid JSON for contactDetails',
-        });
-      }
-    })
+  pricePerDay: Joi.number().min(100).required(),
+
+  location: Joi.string().min(1).max(100).trim().required(),
+
+  phone: Joi.string()
+    .pattern(/^[6-9]\d{9}$/)
     .required(),
 
-  availability: Joi.string()
-    .custom((value, helpers) => {
-      try {
-        const parsed = JSON.parse(value);
-        const { error } = Joi.object({
-          defaultAvailable: Joi.boolean().required(),
-          blockedRanges: Joi.array()
-            .items(
-              Joi.object({
-                from: Joi.date().iso().required(),
-                to: Joi.date().iso().greater(Joi.ref('from')).required(),
-                reason: Joi.string().trim().max(200).allow(''),
-              })
-            )
-            .required(),
-        }).validate(parsed, { abortEarly: false });
+  availability: Joi.object({
+    availableRanges: Joi.array()
+      .items(
+        Joi.object({
+          from: Joi.date().iso().required(),
+          to: Joi.date().iso().min(Joi.ref('from')).required(),
+          reason: Joi.string().trim().max(200).optional(),
+        })
+      )
+      .optional(),
 
-        if (error)
-          return helpers.error('any.invalid', {
-            message: error.details[0].message,
-          });
-        return parsed;
-      } catch {
-        return helpers.error('any.invalid', {
-          message: 'Invalid JSON for availability',
-        });
-      }
-    })
-    .required(),
+    blockedRanges: Joi.array()
+      .items(
+        Joi.object({
+          from: Joi.date().iso().required(),
+          to: Joi.date().iso().min(Joi.ref('from')).required(),
+          reason: Joi.string().trim().max(200).optional(),
+        })
+      )
+      .optional(),
+
+    bookedRanges: Joi.array()
+      .items(
+        Joi.object({
+          from: Joi.date().iso().required(),
+          to: Joi.date().iso().min(Joi.ref('from')).required(),
+          reason: Joi.string().trim().max(200).optional(),
+        })
+      )
+      .optional(),
+  }).required(),
+
+  images: Joi.array().optional(),
 });
 
 export const updateServiceSchema = createServiceSchema.fork(
@@ -86,4 +71,34 @@ export const serviceQuerySchema = Joi.object({
   sort: Joi.string()
     .valid('price_asc', 'price_desc', 'newest', 'oldest')
     .default('newest'),
+}).unknown(false);
+
+export const serviceIdSchema = Joi.object({
+  serviceId: Joi.string().required().messages({
+    'string.empty': 'Service ID is required',
+    'any.required': 'Service ID is required',
+  }),
+});
+
+export const availabilityParamsSchema = Joi.object({
+  serviceId: Joi.string().required().messages({
+    'string.empty': 'Service ID is required',
+    'any.required': 'Service ID is required',
+  }),
+});
+
+export const availabilityQuerySchema = Joi.object({
+  year: Joi.number().integer().min(2020).max(2035).required().messages({
+    'number.base': 'Year must be a valid number',
+    'number.min': 'Year cannot be before 2020',
+    'number.max': 'Year cannot be after 2035',
+    'any.required': 'Year is required',
+  }),
+
+  month: Joi.number().integer().min(1).max(12).required().messages({
+    'number.base': 'Month must be a valid number',
+    'number.min': 'Month must be between 1 and 12',
+    'number.max': 'Month must be between 1 and 12',
+    'any.required': 'Month is required',
+  }),
 }).unknown(false);
