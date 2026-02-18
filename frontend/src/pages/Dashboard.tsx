@@ -1,90 +1,33 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import {
-  Calendar,
-  DollarSign,
-  MapPin,
-  ChevronRight,
-  AlertCircle,
-  Users,
-} from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Calendar, DollarSign, Users } from "lucide-react";
 
 import { useAppSelector } from "@/hooks/useAppSelector";
 
-interface BookingSummary {
-  id: string;
-  serviceTitle: string;
-  category: string;
-  date: string;
-  status: "upcoming" | "completed" | "cancelled";
-  totalPrice: number;
-  location?: string;
-}
-
 export default function Dashboard() {
-  // Get user from Redux store
   const {
     user,
     isAuthenticated,
     isLoading: authLoading,
   } = useAppSelector((state) => state.auth);
 
-  const [bookings, setBookings] = useState<BookingSummary[]>([]);
   const [loading, setLoading] = useState(true);
-  // const [error, setError] = useState<string | null>(null); // Uncomment when real API is added
 
   const navigate = useNavigate();
 
   useEffect(() => {
-    // If not authenticated → redirect to login
     if (!isAuthenticated && !authLoading) {
       navigate("/login", { replace: true });
       return;
     }
 
-    // Simulate fetching bookings (replace with real API call later)
     const fetchBookings = async () => {
       try {
         setLoading(true);
-        // TODO: Replace with real API call using axios/api
-        // const response = await api.get('/bookings');
-        // setBookings(response.data.bookings || []);
 
-        // Simulated data
         await new Promise((resolve) => setTimeout(resolve, 1200));
-
-        setBookings([
-          {
-            id: "bk-001",
-            serviceTitle: "Luxury Garden Venue - Marine Drive",
-            category: "Venue",
-            date: "2026-02-15",
-            status: "upcoming",
-            totalPrice: 45000,
-            location: "Marine Drive, Mumbai",
-          },
-          {
-            id: "bk-002",
-            serviceTitle: "Professional Wedding Photography Team",
-            category: "Photographer",
-            date: "2025-12-28",
-            status: "completed",
-            totalPrice: 28000,
-            location: "Grand Hyatt, Mumbai",
-          },
-          {
-            id: "bk-003",
-            serviceTitle: "Live Band Performance",
-            category: "Music",
-            date: "2026-01-10",
-            status: "cancelled",
-            totalPrice: 18000,
-            location: "Taj Lands End",
-          },
-        ]);
       } catch (err) {
         console.error("Failed to load bookings:", err);
-        // setError('Failed to load bookings. Please try again.');
       } finally {
         setLoading(false);
       }
@@ -95,10 +38,6 @@ export default function Dashboard() {
     }
   }, [isAuthenticated, authLoading, navigate]);
 
-  const upcomingBookings = bookings.filter((b) => b.status === "upcoming");
-  const pastBookings = bookings.filter((b) => b.status !== "upcoming");
-
-  // Show loading while auth is checking or bookings are fetching
   if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -131,9 +70,7 @@ export default function Dashboard() {
                 <p className="text-sm font-medium text-gray-500">
                   Upcoming Bookings
                 </p>
-                <p className="text-3xl font-bold text-indigo-600 mt-1">
-                  {upcomingBookings.length}
-                </p>
+                <p className="text-3xl font-bold text-indigo-600 mt-1"></p>
               </div>
               <div className="bg-indigo-100 p-3 rounded-full">
                 <Calendar className="h-6 w-6 text-indigo-600" />
@@ -145,12 +82,7 @@ export default function Dashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-500">Total Spent</p>
-                <p className="text-3xl font-bold text-green-600 mt-1">
-                  ₹
-                  {bookings
-                    .reduce((sum, b) => sum + b.totalPrice, 0)
-                    .toLocaleString()}
-                </p>
+                <p className="text-3xl font-bold text-green-600 mt-1"></p>
               </div>
               <div className="bg-green-100 p-3 rounded-full">
                 <DollarSign className="h-6 w-6 text-green-600" />
@@ -164,9 +96,7 @@ export default function Dashboard() {
                 <p className="text-sm font-medium text-gray-500">
                   Active Services
                 </p>
-                <p className="text-3xl font-bold text-purple-600 mt-1">
-                  {new Set(bookings.map((b) => b.category)).size}
-                </p>
+                <p className="text-3xl font-bold text-purple-600 mt-1"></p>
               </div>
               <div className="bg-purple-100 p-3 rounded-full">
                 <Users className="h-6 w-6 text-purple-600" />
@@ -175,7 +105,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Upcoming Bookings */}
+        {/* Upcoming Bookings
         <div className="bg-white rounded-xl shadow-md overflow-hidden mb-12">
           <div className="px-6 py-5 border-b border-gray-200 flex items-center justify-between">
             <h2 className="text-xl font-semibold text-gray-900">
@@ -183,7 +113,8 @@ export default function Dashboard() {
             </h2>
             <Link
               to="/services" // or "/bookings/new" if you have that route
-              className="text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1">
+              className="text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1"
+            >
               Book New Service <ChevronRight size={18} />
             </Link>
           </div>
@@ -194,7 +125,8 @@ export default function Dashboard() {
               <p className="text-gray-600 text-lg">No upcoming bookings yet</p>
               <Link
                 to="/services"
-                className="mt-4 inline-block px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
+                className="mt-4 inline-block px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+              >
                 Explore Services
               </Link>
             </div>
@@ -203,7 +135,8 @@ export default function Dashboard() {
               {upcomingBookings.map((booking) => (
                 <div
                   key={booking.id}
-                  className="p-6 hover:bg-gray-50 transition">
+                  className="p-6 hover:bg-gray-50 transition"
+                >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900">
@@ -229,7 +162,8 @@ export default function Dashboard() {
                       </span>
                       <Link
                         to={`/bookings/${booking.id}`}
-                        className="text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1">
+                        className="text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1"
+                      >
                         View Details <ChevronRight size={16} />
                       </Link>
                     </div>
@@ -238,10 +172,10 @@ export default function Dashboard() {
               ))}
             </div>
           )}
-        </div>
+        </div> */}
 
         {/* Past Bookings */}
-        {pastBookings.length > 0 && (
+        {/* {pastBookings.length > 0 && (
           <div className="bg-white rounded-xl shadow-md overflow-hidden">
             <div className="px-6 py-5 border-b border-gray-200">
               <h2 className="text-xl font-semibold text-gray-900">
@@ -252,7 +186,8 @@ export default function Dashboard() {
               {pastBookings.map((booking) => (
                 <div
                   key={booking.id}
-                  className="p-6 hover:bg-gray-50 transition opacity-75">
+                  className="p-6 hover:bg-gray-50 transition opacity-75"
+                >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
                       <h3 className="text-lg font-medium text-gray-800">
@@ -267,7 +202,8 @@ export default function Dashboard() {
                         booking.status === "completed"
                           ? "bg-green-100 text-green-800"
                           : "bg-red-100 text-red-800"
-                      }`}>
+                      }`}
+                    >
                       {booking.status === "completed"
                         ? "Completed"
                         : "Cancelled"}
@@ -277,7 +213,7 @@ export default function Dashboard() {
               ))}
             </div>
           </div>
-        )}
+        )}*/}
       </div>
     </div>
   );

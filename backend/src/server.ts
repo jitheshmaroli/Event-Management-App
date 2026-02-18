@@ -1,6 +1,8 @@
 import { config } from 'dotenv';
 import express from 'express';
 import authRoutes from '@/routes/auth.routes';
+import serviceRoutes from '@/routes/service.routes';
+import adminRoutes from '@/routes/admin.routes';
 import { env } from '@/config/env.config';
 import { connectDB } from '@/config/index';
 import { errorHandler } from '@/middlewares/errorHandler';
@@ -17,7 +19,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(
   cors({
-    origin: 'http://localhost:5173',
+    origin: env.CLIENT_URL,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
@@ -25,6 +27,8 @@ app.use(
 );
 
 app.use('/api/auth', authRoutes);
+app.use('/api/service', serviceRoutes);
+app.use('/api/admin', adminRoutes);
 
 app.use(errorHandler);
 

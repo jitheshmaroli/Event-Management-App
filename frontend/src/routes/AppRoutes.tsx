@@ -15,6 +15,10 @@ import RoleProtectedRoute from "@/components/RoleProtectedRoute";
 import { ROLES } from "@/constants/roles";
 import NotFound from "@/pages/errors/NotFound";
 import Unauthorized from "@/pages/errors/Unauthorized";
+import ServicesList from "@/pages/Admin/ServiceList";
+import ServiceCreate from "@/pages/Admin/ServiceCreate";
+import ServiceView from "@/pages/Admin/ServiceView";
+import ServiceEdit from "@/pages/Admin/ServiceEdit";
 
 export default function AppRoutes() {
   return (
@@ -30,15 +34,18 @@ export default function AppRoutes() {
       {/* Protected pages with layout */}
       <Route element={<MainLayout />}>
         <Route path="/" element={<Home />} />
-        <Route element={<RoleProtectedRoute allowedRoles={[ROLES.USER]} />}>
-          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/services" element={<ServiceList />} />
           <Route path="/services/:id" element={<ServiceDetail />} />
+        <Route element={<RoleProtectedRoute allowedRoles={[ROLES.USER]} />}>
+          <Route path="/dashboard" element={<Dashboard />} />
         </Route>
 
         <Route element={<RoleProtectedRoute allowedRoles={[ROLES.ADMIN]} />}>
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
-          {/* more admin routes later */}
+          <Route path="/admin/services" element={<ServicesList />} />
+          <Route path="/admin/services/new" element={<ServiceCreate />} />
+          <Route path="/admin/services/:id" element={<ServiceView />} />
+          <Route path="/admin/services/:id/edit" element={<ServiceEdit />} />
         </Route>
       </Route>
 

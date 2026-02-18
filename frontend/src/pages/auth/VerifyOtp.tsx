@@ -281,7 +281,8 @@ export default function VerifyOtp() {
                         type="button"
                         onClick={handleResend}
                         disabled={isLoading}
-                        className="text-indigo-600 hover:text-indigo-800 font-medium transition-colors">
+                        className="text-indigo-600 hover:text-indigo-800 font-medium transition-colors"
+                      >
                         Resend Code
                       </button>
                     )}
@@ -300,7 +301,8 @@ export default function VerifyOtp() {
                     disabled:opacity-60 disabled:cursor-not-allowed
                     transition-all transform hover:scale-[1.02] active:scale-[0.98]
                     flex items-center justify-center gap-3
-                  `}>
+                  `}
+                >
                   {isLoading ? (
                     <>
                       <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
@@ -320,7 +322,8 @@ export default function VerifyOtp() {
               <button
                 type="button"
                 onClick={() => navigate("/login")}
-                className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-indigo-700 transition-colors">
+                className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-indigo-700 transition-colors"
+              >
                 <ArrowLeft size={16} />
                 Back to login
               </button>

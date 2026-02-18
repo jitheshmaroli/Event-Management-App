@@ -25,6 +25,8 @@ export const validateRequest =
         }))
       );
     }
-    req[target] = value;
+    if (target === 'body') {
+      req.body = value;
+    }
     next();
   };

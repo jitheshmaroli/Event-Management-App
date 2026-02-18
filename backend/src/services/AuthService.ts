@@ -4,8 +4,8 @@ import { IAuthService } from '@/interfaces/services/IAuthService';
 import { generateOTP, isOTPExpired } from '@/utils/otp.utils';
 import { sendOTPEmail } from '@/utils/email';
 import { TYPES } from '@/inversify/types';
-import { RegisterInput, RegisterResponse } from '@/dtos/auth/RegisterDto';
-import { LoginInput, LoginResponse } from '@/dtos/auth/LoginDto';
+import { RegisterInput, RegisterResponse } from '@/dtos/auth/register.dto';
+import { LoginInput, LoginResponse } from '@/dtos/auth/login.dto';
 import {
   BadRequestError,
   ConflictError,
@@ -23,7 +23,7 @@ import {
 } from '@/utils/jwt';
 import { OtpPurpose } from '@/constants/otpPurpose';
 import { IUser } from '@/models/User';
-import { UserDto } from '@/dtos/auth/UserDto';
+import { UserDto } from '@/dtos/auth/user.dto';
 
 @injectable()
 export class AuthService implements IAuthService {

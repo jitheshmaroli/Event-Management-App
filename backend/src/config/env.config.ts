@@ -13,6 +13,7 @@ function requiredEnv(variableName: string): string {
 
 export const env = {
   PORT: Number(requiredEnv('PORT')),
+  CLIENT_URL: requiredEnv('CLIENT_URL'),
   NODE_ENV: requiredEnv('NODE_ENV'),
   MONGO_URI: requiredEnv('MONGO_URI'),
   JWT_ACCESS_SECRET: requiredEnv('JWT_ACCESS_SECRET'),
@@ -23,4 +24,6 @@ export const env = {
   EMAIL_USER: requiredEnv('EMAIL_USER'),
   EMAIL_PASS: requiredEnv('EMAIL_PASS'),
   EMAIL_FROM: requiredEnv('EMAIL_FROM'),
+  S3_BUCKET_NAME: requiredEnv('S3_BUCKET_NAME'),
+  AWS_REGION: requiredEnv('AWS_REGION'),
 };

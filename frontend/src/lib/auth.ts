@@ -12,7 +12,6 @@ import type {
 export const login = async (
   credentials: LoginCredentials,
 ): Promise<ApiResponse<{ user: User }>> => {
-  console.log(credentials);
   return (await api.post("/auth/login", credentials)).data;
 };
 
@@ -33,7 +32,6 @@ export const verifyOtp = async (
 ): Promise<VerifyOtpResponse> => {
   const response = await api.post("/auth/verify-otp", data);
   const payload = response.data;
-  console.log("verifyOtp raw payload:", payload, "purpose:", data.purpose);
   return payload as VerifyOtpResponse;
 };
 

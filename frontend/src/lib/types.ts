@@ -59,10 +59,4 @@ export interface SignupVerifyResponse {
   data?: User;
 }
 
-// export interface ForgotPasswordVerifyResponse {
-//   success: boolean;
-//   message: string;
-// }
-
 export type VerifyOtpResponse = SignupVerifyResponse;
-// export type VerifyOtpResponse = SignupVerifyResponse | ForgotPasswordVerifyResponse;
