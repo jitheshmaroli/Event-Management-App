@@ -2,22 +2,33 @@ import { SERVICE_CATEGORIES } from '@/constants/service.constants';
 import Joi from 'joi';
 
 export const createServiceSchema = Joi.object({
-  title: Joi.string().min(1).max(120).trim().required(),
-
+  title: Joi.string().min(3).max(120).trim().required().messages({
+    'string.empty': 'Title is required',
+    'string.min': 'Title must be at least 3 characters',
+    'string.max': 'Title cannot exceed more than 120 characters',
+  }),
   category: Joi.string()
     .valid(...SERVICE_CATEGORIES.map((c) => c.value))
     .required()
-    .lowercase(),
-
-  description: Joi.string().min(1).max(3000).trim().required(),
-
-  pricePerDay: Joi.number().min(100).required(),
-
-  location: Joi.string().min(1).max(100).trim().required(),
-
+    .messages({
+      'any.only': 'Please select a valid category',
+    }),
+  description: Joi.string().min(200).max(3000).trim().required().messages({
+    'string.min': 'Description must be atleast 200 characters',
+    'string.max': 'Descripton cannot exceed more than 3000 characters',
+  }),
+  pricePerDay: Joi.number().min(0).required().messages({
+    'number.base': 'Price must be a number',
+    'number.min': 'Price cannot be negative',
+  }),
+  location: Joi.string().max(100).trim().allow(''),
   phone: Joi.string()
     .pattern(/^[6-9]\d{9}$/)
-    .required(),
+    .allow('')
+    .messages({
+      'string.pattern.base':
+        'Please enter a valid 10-digit Indian phone number',
+    }),
 
   availability: Joi.object({
     availableRanges: Joi.array()
@@ -54,10 +65,55 @@ export const createServiceSchema = Joi.object({
   images: Joi.array().optional(),
 });
 
-export const updateServiceSchema = createServiceSchema.fork(
-  Object.keys(createServiceSchema.describe().keys),
-  (s) => s.optional()
-);
+export const updateServiceSchema = Joi.object({
+  title: Joi.string().min(1).max(120).trim().optional(),
+  category: Joi.string()
+    .valid(...SERVICE_CATEGORIES.map((c) => c.value))
+    .lowercase()
+    .optional(),
+  description: Joi.string().min(1).max(3000).trim().optional(),
+  pricePerDay: Joi.number().min(100).optional(),
+  location: Joi.string().min(1).max(100).trim().optional(),
+  phone: Joi.string()
+    .pattern(/^[6-9]\d{9}$/)
+    .optional(),
+
+  availability: Joi.object({
+    availableRanges: Joi.array()
+      .items(
+        Joi.object({
+          from: Joi.date().iso().required(),
+          to: Joi.date().iso().min(Joi.ref('from')).required(),
+          reason: Joi.string().trim().max(200).optional(),
+        })
+      )
+      .optional(),
+
+    blockedRanges: Joi.array()
+      .items(
+        Joi.object({
+          from: Joi.date().iso().required(),
+          to: Joi.date().iso().min(Joi.ref('from')).required(),
+          reason: Joi.string().trim().max(200).optional(),
+        })
+      )
+      .optional(),
+
+    bookedRanges: Joi.array()
+      .items(
+        Joi.object({
+          from: Joi.date().iso().required(),
+          to: Joi.date().iso().min(Joi.ref('from')).required(),
+          reason: Joi.string().trim().max(200).optional(),
+        })
+      )
+      .optional(),
+  }).optional(),
+
+  removedImages: Joi.array().items(Joi.string()).optional(),
+
+  images: Joi.array().items(Joi.string()).optional(),
+}).unknown(false);
 
 export const serviceQuerySchema = Joi.object({
   search: Joi.string().trim().max(100).allow(''),

@@ -13,3 +13,5 @@ export const SERVICE_CATEGORIES = [
 ] as const;
 
 export type ServiceCategory = (typeof SERVICE_CATEGORIES)[number]['value'];
+
+export const FIXED_IMAGE_COUNT = 6;

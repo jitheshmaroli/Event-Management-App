@@ -19,7 +19,8 @@ api.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        await api.post("/auth/refresh");
+        const res = await api.post("/auth/refresh");
+        console.log("res:", res);
         return api(originalRequest);
       } catch (refreshError) {
         // Clear cookies & redirect
@@ -30,6 +31,6 @@ api.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  }
+  },
 );
 export default api;

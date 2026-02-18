@@ -97,10 +97,14 @@ export const updateService = createAsyncThunk(
         formData.append("availability", JSON.stringify(cleaned));
       }
 
-      if (data.images && data.images.length > 0) {
-        data.images.forEach((file) => {
-          formData.append("images", file);
-        });
+      if (data.images?.length) {
+        data.images.forEach((file) => formData.append("images", file));
+      }
+
+      if (data.removedImages?.length) {
+        data.removedImages.forEach((key) =>
+          formData.append("removedImages[]", key),
+        );
       }
 
       const response = await api.put(`/admin/service/${id}`, formData);
@@ -134,7 +138,6 @@ export const fetchAvailability = createAsyncThunk(
       const response = await api.get(`/service/${id}/availability`, {
         params: { year, month },
       });
-      console.log("thunk:", response);
       return { year, month, data: response.data.data };
     } catch {
       return rejectWithValue("Failed to load availability");

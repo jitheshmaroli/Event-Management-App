@@ -52,8 +52,9 @@ export interface ServiceFormData {
   location: string;
   phone: string;
   availability: AvailabilitySettings;
-  images?: File[];
+  images: File[];
   existingImages?: string[];
+  removedImages?: string[];
 }
 
 export interface CreateServicePayload extends Omit<
@@ -80,3 +81,5 @@ export interface MonthAvailability {
   bookedDates: string[];
   blockedDates: string[];
 }
+
+export const FIXED_IMAGE_COUNT = 6;

@@ -50,12 +50,28 @@ export class ServiceController {
       const serviceId = req.params.serviceId as string;
       const data = req.body;
       const files = req.files as Express.Multer.File[] | undefined;
-      const imageKeys = files?.map((f) => f.key).filter(Boolean) ?? undefined;
 
-      const updated = await this.serviceService.update(serviceId, {
-        ...data,
-        images: imageKeys,
-      });
+      const newImageKeys = files?.map((f) => f.key).filter(Boolean) ?? [];
+
+      const removedImages = req.body.removedImages
+        ? Array.isArray(req.body.removedImages)
+          ? req.body.removedImages
+          : [req.body.removedImages]
+        : [];
+
+      const updatePayload = { ...data };
+
+      if (newImageKeys.length > 0) {
+        updatePayload.images = newImageKeys;
+      }
+      if (removedImages.length > 0) {
+        updatePayload.removedImages = removedImages;
+      }
+
+      const updated = await this.serviceService.update(
+        serviceId,
+        updatePayload
+      );
 
       const signedUrls = await getSignedImageUrls(updated.images || [], 7200);
 

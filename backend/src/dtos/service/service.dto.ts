@@ -42,6 +42,7 @@ export interface UpdateServiceInput {
   pricePerDay?: number;
   location?: string;
   images?: string[];
+  removedImages?: string[];
   phone?: string;
   availability?: AvailabilityInput;
 }

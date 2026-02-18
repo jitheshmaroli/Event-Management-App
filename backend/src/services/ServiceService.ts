@@ -7,8 +7,8 @@ import { IServiceRepository } from '@/interfaces/repositories/IServiceRepository
 import { IServiceService } from '@/interfaces/services/IServiceService';
 import { TYPES } from '@/inversify/types';
 import { IService } from '@/models/Service';
-import { NotFoundError } from '@/utils/errors';
-import { getSignedImageUrls } from '@/utils/s3Utils';
+import { BadRequestError, NotFoundError } from '@/utils/errors';
+import { deleteS3Objects, getSignedImageUrls } from '@/utils/s3Utils';
 import { inject, injectable } from 'inversify';
 import { QueryFilter } from 'mongoose';
 import { isWithinInterval } from 'date-fns';
@@ -17,6 +17,8 @@ import {
   toDateString,
   toUtcMidnight,
 } from '@/utils/date.utils';
+import logger from '@/utils/logger';
+import { FIXED_IMAGE_COUNT } from '@/constants/service.constants';
 
 @injectable()
 export class ServiceService implements IServiceService {
@@ -61,9 +63,34 @@ export class ServiceService implements IServiceService {
       };
     }
 
-    if (data.images !== undefined) {
-      updateData.images = data.images;
+    let finalImages = [...(service.images || [])];
+
+    if (data.removedImages?.length) {
+      finalImages = finalImages.filter(
+        (key) => !data.removedImages!.includes(key)
+      );
+
+      const deletedCount = await deleteS3Objects(data.removedImages);
+      if (deletedCount !== data.removedImages.length) {
+        logger.warn(
+          `Only ${deletedCount}/${data.removedImages.length} images deleted from S3`
+        );
+      }
     }
+
+    if (data.images?.length) {
+      finalImages.push(...data.images);
+    }
+
+    if (finalImages.length !== FIXED_IMAGE_COUNT) {
+      throw new BadRequestError(
+        `Service must have exactly ${FIXED_IMAGE_COUNT} images after update. Final count: ${finalImages.length}`
+      );
+    }
+
+    finalImages = [...new Set(finalImages)];
+
+    updateData.images = finalImages;
 
     const updated = await this.serviceRepo.updateById(id, updateData);
     if (!updated) throw new NotFoundError('Update failed');
