@@ -1,48 +1,23 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useAppSelector } from "@/hooks/useAppSelector";
 import { ArrowLeft, MapPin } from "lucide-react";
-import { Button } from "@/components/ui/Button";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useAppDispatch } from "@/hooks/useAppDispatch";
-import {
-  fetchServiceById,
-  fetchAvailability,
-} from "@/features/services/servicesThunks";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
-import { addMonths } from "date-fns";
-import { toDateKey } from "@/utils/date";
+import { fetchServiceById } from "@/features/services/servicesThunks";
+import { Button } from "@/components/ui/Button";
 
 export default function ServiceDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
 
-  const { currentService, loading, availabilityByMonth } = useAppSelector(
-    (state) => state.services,
-  );
-  const [currentDate, setCurrentDate] = useState(new Date());
-
-  const handleMonthChange = useCallback((date: Date) => {
-    setCurrentDate(date);
-  }, []);
+  const { currentService, loading } = useAppSelector((state) => state.services);
 
   useEffect(() => {
     if (id) {
       dispatch(fetchServiceById(id));
     }
   }, [id, dispatch]);
-
-  useEffect(() => {
-    if (!id || !currentService) return;
-
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth() + 1;
-    const key = `${year}-${month}`;
-    if (!availabilityByMonth[key]) {
-      dispatch(fetchAvailability({ id, year, month }));
-    }
-  }, [id, currentDate, currentService, dispatch, availabilityByMonth]);
 
   if (loading || !currentService) {
     return (
@@ -51,23 +26,6 @@ export default function ServiceDetail() {
       </div>
     );
   }
-
-  const getDayClass = (date: Date) => {
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth() + 1;
-
-    const key = `${year}-${month}`;
-    const avail = availabilityByMonth[key];
-    if (!avail) return "";
-
-    const dayStr = toDateKey(date);
-
-    if (avail.bookedDates.includes(dayStr)) return "bg-red-500 text-white";
-    if (avail.availableDates.includes(dayStr)) return "bg-green-500 text-white";
-    if (avail.blockedDates.includes(dayStr)) return "bg-gray-500 text-white";
-
-    return "bg-gray-100 text-gray-400";
-  };
 
   return (
     <div className="min-h-screen bg-gray-50 pt-4 pb-16">
@@ -81,6 +39,7 @@ export default function ServiceDetail() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
           <div className="lg:col-span-2 space-y-8">
+            {/* Images */}
             {currentService.signedImages?.length > 0 ? (
               <img
                 src={currentService.signedImages[0]}
@@ -99,13 +58,14 @@ export default function ServiceDetail() {
                   <img
                     key={idx}
                     src={img}
-                    alt=""
+                    alt={`Gallery ${idx + 1}`}
                     className="w-full h-auto object-cover rounded-xl shadow-md aspect-video"
                   />
                 ))}
               </div>
             )}
 
+            {/* Details card */}
             <div className="bg-white rounded-xl shadow-md p-8">
               <div className="flex flex-wrap items-start justify-between gap-6 mb-6">
                 <div>
@@ -146,27 +106,22 @@ export default function ServiceDetail() {
             </div>
           </div>
 
+          {/* Right sidebar – CTA */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-2xl shadow-xl p-6 lg:sticky lg:top-8">
-              <h2 className="text-xl font-bold text-gray-900 mb-5 flex items-center gap-2">
-                Check Availability
-                <span className="text-sm font-normal text-gray-500">
-                  (Green=Available, Red=Booked, Gray=Blocked)
-                </span>
+            <div className="bg-white rounded-2xl shadow-xl p-6 lg:sticky lg:top-8 text-center space-y-6">
+              <h2 className="text-2xl font-bold text-gray-900">
+                Ready to Book?
               </h2>
-
-              <DatePicker
-                inline
-                selected={currentDate}
-                onMonthChange={handleMonthChange}
-                minDate={new Date()}
-                maxDate={addMonths(new Date(), 12)}
-                dayClassName={getDayClass}
-              />
-
-              <Button className="w-full mt-6" size="lg">
-                Book Now
+              <Button
+                size="lg"
+                className="w-full"
+                onClick={() => navigate(`/bookings/new/${id}`)}
+              >
+                Select Dates & Book
               </Button>
+              <p className="text-sm text-gray-500">
+                Check availability and get instant price breakdown
+              </p>
             </div>
           </div>
         </div>

@@ -3,7 +3,6 @@ import {
   SERVICE_CATEGORIES,
   type ServiceFormData,
   type Range,
-  FIXED_IMAGE_COUNT,
 } from "@/types/service";
 import { Input } from "../ui/Input";
 import { Textarea } from "../ui/TextArea";
@@ -20,6 +19,7 @@ import {
 } from "@/utils/date";
 import { serviceSchema } from "@/utils/validations/service.validation";
 import { cn } from "@/lib/utils";
+import { FIXED_IMAGE_COUNT } from "@/constants/service";
 
 interface Props {
   initialData?: Partial<ServiceFormData>;

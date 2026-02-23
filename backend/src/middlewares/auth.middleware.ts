@@ -19,6 +19,7 @@ export const authenticate = async (
 ) => {
   const token = req.cookies.accessToken;
 
+  console.log('accesstoken:', req.cookies);
   if (!token) {
     return next(
       new UnauthorizedError(

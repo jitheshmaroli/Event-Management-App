@@ -82,4 +82,7 @@ export interface MonthAvailability {
   blockedDates: string[];
 }
 
-export const FIXED_IMAGE_COUNT = 6;
+export type PriceBreakDownProps = {
+  amount: number;
+  days: number;
+};

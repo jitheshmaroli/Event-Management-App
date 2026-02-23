@@ -1,1 +1,1 @@
-export const MIN_IMAGES = 6;
+export const FIXED_IMAGE_COUNT = 6;

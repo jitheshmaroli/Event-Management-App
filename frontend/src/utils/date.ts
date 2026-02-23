@@ -1,4 +1,6 @@
-// Convert Date -> yyyy-MM-dd (LOCAL timezone safe)
+import { differenceInDays } from "date-fns";
+
+// Convert Date to yyyy-MM-dd (LOCAL timezone)
 export const toDateKey = (date: Date): string => {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, "0");
@@ -6,13 +8,13 @@ export const toDateKey = (date: Date): string => {
   return `${y}-${m}-${d}`;
 };
 
-// Convert yyyy-MM-dd -> Date (LOCAL, NOT UTC)
+// Convert yyyy-MM-dd to Date (LOCAL)
 export const fromDateKey = (input: string | Date): Date => {
   if (!input) return new Date(NaN);
 
   if (input instanceof Date) return input;
 
-  // Convert ISO or yyyy-MM-dd → yyyy-MM-dd first
+  // Convert ISO or yyyy-MM-dd to yyyy-MM-dd
   const datePart = input.includes("T") ? input.split("T")[0] : input;
 
   const [y, m, d] = datePart.split("-").map(Number);
@@ -27,7 +29,6 @@ export const normalizeDateString = (input: string | Date): string => {
   // ISO string
   if (input.includes("T")) return input.split("T")[0];
 
-  // already yyyy-MM-dd
   return input;
 };
 
@@ -39,3 +40,11 @@ export const isInRange = (dateKey: string, from: string, to: string) => {
 
   return d >= f && d <= t;
 };
+
+export function calculateBookingDays(
+  start: Date | null,
+  end: Date | null,
+): number {
+  if (!start || !end) return 0;
+  return differenceInDays(end, start) + 1;
+}

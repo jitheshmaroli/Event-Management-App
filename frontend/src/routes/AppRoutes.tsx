@@ -19,6 +19,11 @@ import ServicesList from "@/pages/Admin/ServiceList";
 import ServiceCreate from "@/pages/Admin/ServiceCreate";
 import ServiceView from "@/pages/Admin/ServiceView";
 import ServiceEdit from "@/pages/Admin/ServiceEdit";
+import BookingPage from "@/pages/bookings/BookingPage";
+import BookingSummary from "@/pages/bookings/BookingSummary";
+import PaymentPage from "@/pages/bookings/PaymentPage";
+import BookingSuccess from "@/pages/bookings/BookingSuccess";
+import BookingFailed from "@/pages/bookings/BookingFailed";
 
 export default function AppRoutes() {
   return (
@@ -34,9 +39,14 @@ export default function AppRoutes() {
       {/* Protected pages with layout */}
       <Route element={<MainLayout />}>
         <Route path="/" element={<Home />} />
-          <Route path="/services" element={<ServiceList />} />
-          <Route path="/services/:id" element={<ServiceDetail />} />
+        <Route path="/services" element={<ServiceList />} />
+        <Route path="/services/:id" element={<ServiceDetail />} />
         <Route element={<RoleProtectedRoute allowedRoles={[ROLES.USER]} />}>
+          <Route path="/bookings/new/:serviceId" element={<BookingPage />} />
+          <Route path="/bookings/summary" element={<BookingSummary />} />
+          <Route path="/bookings/payment" element={<PaymentPage />} />
+          <Route path="/bookings/success" element={<BookingSuccess />} />
+          <Route path="/bookings/failed" element={<BookingFailed />} />
           <Route path="/dashboard" element={<Dashboard />} />
         </Route>
 
