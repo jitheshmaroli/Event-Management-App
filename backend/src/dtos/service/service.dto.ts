@@ -20,7 +20,6 @@ export interface RangeInput {
 
 export interface AvailabilityInput {
   availableRanges?: RangeInput[];
-  blockedRanges?: RangeInput[];
   bookedRanges?: RangeInput[];
 }
 

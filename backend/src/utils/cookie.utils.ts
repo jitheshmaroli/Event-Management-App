@@ -1,3 +1,10 @@
+import { env } from '@/config/env.config';
+import {
+  ACCESS_TOKEN,
+  ACCESS_TOKEN_MAX_AGE,
+  REFRESH_TOKEN,
+  REFRESH_TOKEN_MAX_AGE,
+} from '@/constants/auth.constants';
 import { Response } from 'express';
 
 export const setAuthCookies = (
@@ -5,17 +12,17 @@ export const setAuthCookies = (
   accessToken: string,
   refreshToken: string
 ) => {
-  res.cookie('accessToken', accessToken, {
+  res.cookie(ACCESS_TOKEN, accessToken, {
     httpOnly: true,
-    secure: true,
-    sameSite: 'none',
-    maxAge: 15 * 60 * 1000,
+    secure: env.NODE_ENV === 'production',
+    sameSite: env.NODE_ENV === 'production' ? 'none' : 'lax',
+    maxAge: ACCESS_TOKEN_MAX_AGE,
   });
 
-  res.cookie('refreshToken', refreshToken, {
+  res.cookie(REFRESH_TOKEN, refreshToken, {
     httpOnly: true,
-    secure: true,
-    sameSite: 'none',
-    maxAge: 30 * 24 * 60 * 60 * 1000,
+    secure: env.NODE_ENV === 'production',
+    sameSite: env.NODE_ENV === 'production' ? 'none' : 'lax',
+    maxAge: REFRESH_TOKEN_MAX_AGE,
   });
 };

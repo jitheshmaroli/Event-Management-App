@@ -109,8 +109,6 @@ export default function ServiceView() {
 
     if (avail.bookedDates.includes(dayStr)) return "bg-red-500 text-white";
     if (avail.availableDates.includes(dayStr)) return "bg-green-500 text-white";
-    if (avail.blockedDates.includes(dayStr)) return "bg-gray-500 text-white";
-
     return "bg-gray-100 text-gray-400";
   };
 
@@ -228,7 +226,7 @@ export default function ServiceView() {
               <h2 className="text-xl font-bold text-gray-900 mb-5 flex items-center gap-2">
                 Availability
                 <span className="text-sm font-normal text-gray-500">
-                  (Green=Available, Red=Booked, Gray=Blocked)
+                  (Green=Available, Red=Booked)
                 </span>
               </h2>
 
@@ -262,11 +260,6 @@ export default function ServiceView() {
                             {format(fromDateKey(range.from), "dd MMM yyyy")} –{" "}
                             {format(fromDateKey(range.to), "dd MMM yyyy")}
                           </span>
-                          {range.reason && (
-                            <span className="ml-3 text-green-600 text-xs italic">
-                              ({range.reason})
-                            </span>
-                          )}
                         </div>
                       ),
                     )}
@@ -275,33 +268,6 @@ export default function ServiceView() {
                       <p className="text-sm text-gray-500 italic">
                         Always available (no specific periods defined)
                       </p>
-                    )}
-                  </div>
-                </div>
-
-                <div>
-                  <h4 className="text-sm font-medium text-gray-800 mb-3">
-                    Blocked Periods (
-                    {currentService.availability.blockedRanges.length})
-                  </h4>
-                  <div className="space-y-2.5">
-                    {currentService.availability.blockedRanges.map(
-                      (range, idx) => (
-                        <div
-                          key={idx}
-                          className="flex items-center bg-gray-50 border border-gray-100 rounded-lg px-4 py-2.5 text-sm"
-                        >
-                          <span className="font-medium text-gray-800">
-                            {format(fromDateKey(range.from), "dd MMM yyyy")} –{" "}
-                            {format(fromDateKey(range.to), "dd MMM yyyy")}
-                          </span>
-                          {range.reason && (
-                            <span className="ml-3 text-gray-600 text-xs italic">
-                              ({range.reason})
-                            </span>
-                          )}
-                        </div>
-                      ),
                     )}
                   </div>
                 </div>
@@ -322,25 +288,11 @@ export default function ServiceView() {
                             {format(fromDateKey(range.from), "dd MMM yyyy")} –{" "}
                             {format(fromDateKey(range.to), "dd MMM yyyy")}
                           </span>
-                          {range.reason && (
-                            <span className="ml-3 text-red-600 text-xs italic">
-                              ({range.reason})
-                            </span>
-                          )}
                         </div>
                       ),
                     )}
                   </div>
                 </div>
-              </div>
-
-              {/* Timestamps */}
-              <div className="mt-8 pt-6 border-t border-gray-100 text-xs text-gray-500 text-center">
-                Created:{" "}
-                {new Date(currentService.createdAt).toLocaleDateString()}
-                <br />
-                Last updated:{" "}
-                {new Date(currentService.updatedAt).toLocaleDateString()}
               </div>
             </div>
           </div>

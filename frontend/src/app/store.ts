@@ -3,6 +3,7 @@ import { persistReducer, persistStore } from "redux-persist";
 import storage from "redux-persist/lib/storage";
 import authReducer from "@/features/auth/authSlice";
 import serviceReducer from "@/features/services/servicesSlice";
+import bookingReducer from "@/features/bookings/bookingSlice";
 
 const persistConfig = {
   key: "root",
@@ -16,6 +17,7 @@ export const store = configureStore({
   reducer: {
     auth: persistedReducer,
     services: serviceReducer,
+    bookings: bookingReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

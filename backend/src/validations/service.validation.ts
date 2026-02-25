@@ -36,17 +36,6 @@ export const createServiceSchema = Joi.object({
         Joi.object({
           from: Joi.date().iso().required(),
           to: Joi.date().iso().min(Joi.ref('from')).required(),
-          reason: Joi.string().trim().max(200).optional(),
-        })
-      )
-      .optional(),
-
-    blockedRanges: Joi.array()
-      .items(
-        Joi.object({
-          from: Joi.date().iso().required(),
-          to: Joi.date().iso().min(Joi.ref('from')).required(),
-          reason: Joi.string().trim().max(200).optional(),
         })
       )
       .optional(),
@@ -56,7 +45,6 @@ export const createServiceSchema = Joi.object({
         Joi.object({
           from: Joi.date().iso().required(),
           to: Joi.date().iso().min(Joi.ref('from')).required(),
-          reason: Joi.string().trim().max(200).optional(),
         })
       )
       .optional(),
@@ -84,17 +72,6 @@ export const updateServiceSchema = Joi.object({
         Joi.object({
           from: Joi.date().iso().required(),
           to: Joi.date().iso().min(Joi.ref('from')).required(),
-          reason: Joi.string().trim().max(200).optional(),
-        })
-      )
-      .optional(),
-
-    blockedRanges: Joi.array()
-      .items(
-        Joi.object({
-          from: Joi.date().iso().required(),
-          to: Joi.date().iso().min(Joi.ref('from')).required(),
-          reason: Joi.string().trim().max(200).optional(),
         })
       )
       .optional(),
@@ -104,7 +81,6 @@ export const updateServiceSchema = Joi.object({
         Joi.object({
           from: Joi.date().iso().required(),
           to: Joi.date().iso().min(Joi.ref('from')).required(),
-          reason: Joi.string().trim().max(200).optional(),
         })
       )
       .optional(),

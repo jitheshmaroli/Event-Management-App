@@ -17,7 +17,7 @@ export default function ServiceEdit() {
 
   const { currentService, loading } = useAppSelector((state) => state.services);
   const [hasAttemptedFetch, setHasAttemptedFetch] = useState(false);
-  
+
   useEffect(() => {
     if (id) {
       dispatch(fetchServiceById(id)).finally(() => {
@@ -62,11 +62,11 @@ export default function ServiceEdit() {
     images: [],
   };
 
-  const handleSubmit = async (data: ServiceFormData) => {
+  const handleSubmit = async (changedData: Partial<ServiceFormData>) => {
     if (!id) return;
 
     try {
-      await dispatch(updateService({ id, data })).unwrap();
+      await dispatch(updateService({ id, data: changedData })).unwrap();
       navigate("/admin/services");
     } catch (err) {
       console.error("Update failed:", err);
