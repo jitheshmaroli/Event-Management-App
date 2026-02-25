@@ -48,7 +48,7 @@ export default function AvailabilityDatePicker({
     const dayKey = toDateKey(date);
     return (
       avail.availableDates.includes(dayKey) &&
-      !avail.blockedDates.includes(dayKey) &&
+      // !avail.blockedDates.includes(dayKey) &&
       !avail.bookedDates.includes(dayKey)
     );
   };
@@ -62,8 +62,8 @@ export default function AvailabilityDatePicker({
 
     if (avail.bookedDates.includes(dayStr))
       return "bg-red-200 text-red-800 line-through";
-    if (avail.blockedDates.includes(dayStr))
-      return "bg-gray-300 text-gray-500 line-through";
+    // if (avail.blockedDates.includes(dayStr))
+    //   return "bg-gray-300 text-gray-500 line-through";
     if (avail.availableDates.includes(dayStr))
       return "bg-green-100 text-green-800 font-medium";
 

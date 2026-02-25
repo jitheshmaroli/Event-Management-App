@@ -33,7 +33,6 @@ export class ServiceService implements IServiceService {
       ...data,
       availability: {
         availableRanges: normalizeRanges(availability?.availableRanges),
-        blockedRanges: normalizeRanges(availability?.blockedRanges),
         bookedRanges: normalizeRanges(availability?.bookedRanges),
       },
       images: data.images ?? [],
@@ -57,9 +56,15 @@ export class ServiceService implements IServiceService {
 
     if (data.availability) {
       updateData.availability = {
-        availableRanges: normalizeRanges(data.availability.availableRanges),
-        blockedRanges: normalizeRanges(data.availability.blockedRanges),
-        bookedRanges: normalizeRanges(data.availability.bookedRanges),
+        ...(service.availability || {}),
+        availableRanges:
+          data.availability.availableRanges !== undefined
+            ? normalizeRanges(data.availability.availableRanges)
+            : service.availability?.availableRanges || [],
+        bookedRanges:
+          data.availability.bookedRanges !== undefined
+            ? normalizeRanges(data.availability.bookedRanges)
+            : service.availability?.bookedRanges || [],
       };
     }
 
@@ -152,16 +157,6 @@ export class ServiceService implements IServiceService {
           ],
         },
         {
-          'availability.blockedRanges': {
-            $not: {
-              $elemMatch: {
-                from: { $lte: target },
-                to: { $gte: target },
-              },
-            },
-          },
-        },
-        {
           'availability.bookedRanges': {
             $not: {
               $elemMatch: {
@@ -230,7 +225,6 @@ export class ServiceService implements IServiceService {
   ): Promise<{
     availableDates: string[];
     bookedDates: string[];
-    blockedDates: string[];
   }> {
     const service = await this.serviceRepo.findById(id);
     if (!service) throw new NotFoundError('Service not found');
@@ -239,13 +233,11 @@ export class ServiceService implements IServiceService {
     const end = new Date(Date.UTC(year, month, 0));
 
     const availableRanges = service.availability.availableRanges || [];
-    const blockedRanges = service.availability.blockedRanges || [];
     const bookedRanges = service.availability.bookedRanges || [];
     const hasAvailableRanges = availableRanges.length > 0;
 
     const availableDates: string[] = [];
     const bookedDates: string[] = [];
-    const blockedDates: string[] = [];
 
     for (
       let d = new Date(start);
@@ -268,14 +260,6 @@ export class ServiceService implements IServiceService {
         continue;
       }
 
-      const isBlocked = blockedRanges.some((r) =>
-        isWithinInterval(dayMidnight, { start: r.from, end: r.to })
-      );
-      if (isBlocked) {
-        blockedDates.push(dayStr);
-        continue;
-      }
-
       const isAvailable =
         !hasAvailableRanges ||
         availableRanges.some((r) =>
@@ -287,6 +271,6 @@ export class ServiceService implements IServiceService {
       }
     }
 
-    return { availableDates, bookedDates, blockedDates };
+    return { availableDates, bookedDates };
   }
 }

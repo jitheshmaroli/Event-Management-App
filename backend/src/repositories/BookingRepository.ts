@@ -1,6 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { injectable } from 'inversify';
-import { Booking, IBooking } from '@/models/Booking';
+import {
+  Booking,
+  BookingStatus,
+  IBooking,
+  PaymentStatus,
+} from '@/models/Booking';
 import { IBookingRepository } from '@/interfaces/repositories/IBookingRepository';
 import { ClientSession } from 'mongoose';
 
@@ -39,6 +44,20 @@ export class BookingRepository implements IBookingRepository {
     return Booking.findOne(query).lean();
   }
 
+  async hasOverlappingBookingOrReservation(
+    serviceId: string,
+    start: Date,
+    end: Date
+  ): Promise<boolean> {
+    const conflict = await Booking.findOne({
+      service: serviceId,
+      status: { $in: [BookingStatus.RESERVED, BookingStatus.CONFIRMED] },
+      $or: [{ startDate: { $lte: end }, endDate: { $gte: start } }],
+    }).lean();
+
+    return !!conflict;
+  }
+
   async updateStatus(
     id: string,
     status: string,
@@ -61,5 +80,67 @@ export class BookingRepository implements IBookingRepository {
       { $set: { payment: data } },
       { new: true, session }
     ).lean();
+  }
+
+  async findByPaymentReferenceId(
+    orderId: string,
+    session?: ClientSession
+  ): Promise<IBooking | null> {
+    return Booking.findOne({ 'payment.referenceId': orderId })
+      .session(session ?? null)
+      .lean();
+  }
+
+  async confirmBooking(
+    bookingId: string,
+    paymentData: {
+      status: PaymentStatus;
+      referenceId: string;
+    },
+    session?: ClientSession
+  ): Promise<IBooking | null> {
+    return Booking.findByIdAndUpdate(
+      bookingId,
+      {
+        $set: {
+          status: BookingStatus.CONFIRMED,
+          'payment.status': paymentData.status,
+          'payment.referenceId': paymentData.referenceId,
+        },
+        $unset: {
+          reservedUntil: '',
+          expiresAt: '',
+        },
+      },
+      { new: true, session }
+    ).lean();
+  }
+
+  async markAsFailedById(
+    bookingId: string,
+    session?: ClientSession
+  ): Promise<IBooking | null> {
+    return Booking.findByIdAndUpdate(
+      bookingId,
+      { $set: { status: BookingStatus.FAILED } },
+      { new: true, session }
+    ).lean();
+  }
+
+  async unsetReservationFields(
+    bookingId: string,
+    session?: ClientSession
+  ): Promise<boolean> {
+    const result = await Booking.updateOne(
+      { _id: bookingId },
+      {
+        $unset: {
+          reservedUntil: '',
+          expiresAt: '',
+        },
+      },
+      { session }
+    );
+    return result.modifiedCount === 1;
   }
 }

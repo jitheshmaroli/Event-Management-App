@@ -21,6 +21,5 @@ export interface IServiceService {
   ): Promise<{
     availableDates: string[];
     bookedDates: string[];
-    blockedDates: string[];
   }>;
 }

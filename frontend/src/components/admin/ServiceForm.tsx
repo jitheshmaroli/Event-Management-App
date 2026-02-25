@@ -53,7 +53,6 @@ export default function ServiceForm({
     if (!initialData.availability) {
       return {
         availableRanges: [],
-        blockedRanges: [],
         bookedRanges: [],
       };
     }
@@ -61,14 +60,19 @@ export default function ServiceForm({
       availableRanges: normalizeRanges(
         initialData.availability.availableRanges || [],
       ),
-      blockedRanges: normalizeRanges(
-        initialData.availability.blockedRanges || [],
-      ),
       bookedRanges: normalizeRanges(
         initialData.availability.bookedRanges || [],
       ),
     };
   }, [initialData]);
+
+  // Helper to compare arrays ignoring order (for ranges)
+  const rangesEqual = (a: Range[], b: Range[]) => {
+    if (a.length !== b.length) return false;
+    const sortedA = [...a].sort((x, y) => x.from.localeCompare(y.from));
+    const sortedB = [...b].sort((x, y) => x.from.localeCompare(y.from));
+    return JSON.stringify(sortedA) === JSON.stringify(sortedB);
+  };
 
   const initialFormState: ServiceFormData = {
     title: initialData.title?.trim() || "",
@@ -84,41 +88,61 @@ export default function ServiceForm({
 
   const [form, setForm] = useState<ServiceFormData>(initialFormState);
 
-  // compares against initial values
-  const isDirty = useMemo(() => {
-    if (form.title.trim() !== (initialData.title || "").trim()) return true;
-    if (form.category !== (initialData.category || "venue")) return true;
-    if (form.description.trim() !== (initialData.description || "").trim())
-      return true;
-    if (form.pricePerDay !== (initialData.pricePerDay ?? 0)) return true;
-    if (form.location.trim() !== (initialData.location || "").trim())
-      return true;
-    if (form.phone.trim() !== (initialData.phone || "").trim()) return true;
+  // Compute which fields actually changed
+  const getDirtyFields = (): Partial<ServiceFormData> => {
+    const dirty: Partial<ServiceFormData> = {};
 
-    if (form.images.length > 0) return true;
-    if (removedExistingImages.length > 0) return true;
+    if (form.title.trim() !== (initialData.title || "").trim()) {
+      dirty.title = form.title.trim();
+    }
+    if (form.category !== (initialData.category || "venue")) {
+      dirty.category = form.category;
+    }
+    if (form.description.trim() !== (initialData.description || "").trim()) {
+      dirty.description = form.description.trim();
+    }
+    if (form.pricePerDay !== (initialData.pricePerDay ?? 0)) {
+      dirty.pricePerDay = form.pricePerDay;
+    }
+    if (form.location.trim() !== (initialData.location || "").trim()) {
+      dirty.location = form.location.trim();
+    }
+    if (form.phone.trim() !== (initialData.phone || "").trim()) {
+      dirty.phone = form.phone.trim();
+    }
+
+    // Images changed
+    if (form.images.length > 0 || removedExistingImages.length > 0) {
+      dirty.images = form.images;
+      if (removedExistingImages.length > 0) {
+        dirty.removedImages = removedExistingImages;
+      }
+    }
+
+    // Availability
+    const initAvail = initialData.availability || {
+      availableRanges: [],
+      bookedRanges: [],
+    };
+
     if (
-      (form.existingImages?.length ?? 0) !==
-      (initialData.existingImages?.length ?? 0)
-    )
-      return true;
+      !rangesEqual(
+        form.availability.availableRanges,
+        initAvail.availableRanges,
+      ) ||
+      !rangesEqual(form.availability.bookedRanges, initAvail.bookedRanges)
+    ) {
+      dirty.availability = {
+        availableRanges: form.availability.availableRanges,
+        bookedRanges: form.availability.bookedRanges,
+      };
+    }
 
-    const fa = form.availability;
-    const ia = normalizedInitialAvailability;
+    return dirty;
+  };
 
-    if (fa.availableRanges.length !== ia.availableRanges.length) return true;
-    if (fa.blockedRanges.length !== ia.blockedRanges.length) return true;
-    if (fa.bookedRanges.length !== ia.bookedRanges.length) return true;
-
-    const rangesEqual = (a: Range[], b: Range[]) =>
-      JSON.stringify(a) === JSON.stringify(b);
-
-    if (!rangesEqual(fa.availableRanges, ia.availableRanges)) return true;
-    if (!rangesEqual(fa.blockedRanges, ia.blockedRanges)) return true;
-    if (!rangesEqual(fa.bookedRanges, ia.bookedRanges)) return true;
-
-    return false;
-  }, [form, initialData, normalizedInitialAvailability, removedExistingImages]);
+  const dirtyFields = getDirtyFields();
+  const isDirty = Object.keys(dirtyFields).length > 0;
 
   // Validation
   const validateForm = useCallback(() => {
@@ -155,10 +179,6 @@ export default function ServiceForm({
     null,
     null,
   ]);
-  const [newRangeReason, setNewRangeReason] = useState<string>("");
-  const [rangeType, setRangeType] = useState<
-    "available" | "blocked" | "booked"
-  >("available");
   const [feedback, setFeedback] = useState<{
     type: "success" | "error";
     message: string;
@@ -177,7 +197,6 @@ export default function ServiceForm({
         merged[merged.length - 1] = {
           ...last,
           to: curr.to > last.to ? curr.to : last.to,
-          reason: last.reason || curr.reason,
         };
       } else {
         merged.push(curr);
@@ -186,41 +205,65 @@ export default function ServiceForm({
     return merged;
   };
 
-  const addOrUpdateRange = (from: string, to: string, reason?: string) => {
+  const addOrUpdateRange = (from: string, to: string) => {
     if (!from || !to || isBefore(fromDateKey(to), fromDateKey(from))) {
       setFeedback({ type: "error", message: "Invalid range." });
       return;
     }
 
     if (isBefore(startOfDay(fromDateKey(from)), startOfDay(new Date()))) {
-      setFeedback({ type: "error", message: "No past dates." });
+      setFeedback({ type: "error", message: "Cannot set past dates." });
       return;
     }
 
-    if (rangeType !== "booked") {
-      const newInterval = { start: fromDateKey(from), end: fromDateKey(to) };
-      const overlapsBooked = form.availability.bookedRanges.some((r) => {
-        const rStart = fromDateKey(r.from);
-        const rEnd = fromDateKey(r.to);
-        return newInterval.start <= rEnd && newInterval.end >= rStart;
-      });
-
-      if (overlapsBooked) {
-        setFeedback({
-          type: "error",
-          message: "Cannot overlap booked ranges.",
-        });
-        return;
-      }
-    }
-
     setForm((prev) => {
-      const key = `${rangeType}Ranges` as keyof typeof prev.availability;
-      const updatedRanges = [...prev.availability[key]];
-      const newRange = { from, to, reason: reason?.trim() || undefined };
+      const updatedRanges = [...prev.availability.availableRanges];
+      const newRange = { from, to };
 
       if (editingIndex !== null) {
-        updatedRanges[editingIndex] = newRange;
+        const oldRange = prev.availability.availableRanges[editingIndex];
+        const oldStart = fromDateKey(oldRange.from);
+        const oldEnd = fromDateKey(oldRange.to);
+        const newStart = fromDateKey(from);
+        const newEnd = fromDateKey(to);
+
+        if (newStart > oldStart || newEnd < oldEnd) {
+          // Shortened → create split pieces if necessary
+          const pieces: Range[] = [];
+
+          if (newStart > oldStart) {
+            pieces.push({
+              from: oldRange.from,
+              to: toDateKey(new Date(newStart.getTime() - 86400000)),
+            });
+          }
+
+          pieces.push(newRange);
+
+          if (newEnd < oldEnd) {
+            pieces.push({
+              from: toDateKey(new Date(newEnd.getTime() + 86400000)),
+              to: oldRange.to,
+            });
+          }
+
+          const newList = [
+            ...prev.availability.availableRanges.slice(0, editingIndex),
+            ...pieces,
+            ...prev.availability.availableRanges.slice(editingIndex + 1),
+          ];
+
+          return {
+            ...prev,
+            availability: {
+              ...prev.availability,
+              availableRanges: mergeRanges(newList),
+            },
+          };
+        } else {
+          // Normal replace (same size or extended)
+          updatedRanges[editingIndex] = newRange;
+        }
       } else {
         updatedRanges.push(newRange);
       }
@@ -229,7 +272,7 @@ export default function ServiceForm({
         ...prev,
         availability: {
           ...prev.availability,
-          [key]: mergeRanges(updatedRanges),
+          availableRanges: mergeRanges(updatedRanges),
         },
       };
     });
@@ -237,41 +280,37 @@ export default function ServiceForm({
     resetTemp();
     setFeedback({
       type: "success",
-      message: `${editingIndex !== null ? "Updated" : "Added"} ${rangeType} period.`,
+      message:
+        editingIndex !== null
+          ? "Available period updated"
+          : "Available period added",
     });
     setTimeout(() => setFeedback(null), 4000);
   };
 
   const resetTemp = () => {
     setTempRange([null, null]);
-    setNewRangeReason("");
     setEditingIndex(null);
   };
 
-  const editRange = (
-    type: "available" | "blocked" | "booked",
-    index: number,
-  ) => {
-    const range = form.availability[`${type}Ranges`][index];
+  const editRange = (index: number) => {
+    const range = form.availability.availableRanges[index];
     setTempRange([fromDateKey(range.from), fromDateKey(range.to)]);
-    setNewRangeReason(range.reason || "");
-    setRangeType(type);
     setEditingIndex(index);
   };
 
-  const removeRange = (
-    type: "available" | "blocked" | "booked",
-    index: number,
-  ) => {
+  const removeRange = (index: number) => {
     setForm((prev) => ({
       ...prev,
       availability: {
         ...prev.availability,
-        [`${type}Ranges`]: prev.availability[`${type}Ranges`].filter(
+        availableRanges: prev.availability.availableRanges.filter(
           (_, i) => i !== index,
         ),
       },
     }));
+    setFeedback({ type: "success", message: "Available period removed" });
+    setTimeout(() => setFeedback(null), 4000);
   };
 
   const handleChange = (
@@ -296,36 +335,23 @@ export default function ServiceForm({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!canSubmit) return;
-
-    const submitData: Partial<ServiceFormData> = { ...form };
-
-    if (form.images.length === 0 && removedExistingImages.length === 0) {
-      delete submitData.images;
-      delete submitData.removedImages;
-    } else {
-      submitData.removedImages =
-        removedExistingImages.length > 0 ? removedExistingImages : undefined;
-    }
-
-    onSubmit(submitData as ServiceFormData);
+    onSubmit(dirtyFields as ServiceFormData);
   };
 
   const getDayClass = (date: Date) => {
     const dStr = toDateKey(date);
     if (
       form.availability.bookedRanges.some((r) => isInRange(dStr, r.from, r.to))
-    )
+    ) {
       return "bg-red-200";
+    }
     if (
       form.availability.availableRanges.some((r) =>
         isInRange(dStr, r.from, r.to),
       )
-    )
+    ) {
       return "bg-green-200";
-    if (
-      form.availability.blockedRanges.some((r) => isInRange(dStr, r.from, r.to))
-    )
-      return "bg-gray-200";
+    }
     return "";
   };
 
@@ -451,15 +477,14 @@ export default function ServiceForm({
       </div>
 
       {/* AVAILABILITY SECTION */}
-
       <div className="space-y-6 border-t pt-6">
         <div>
           <h3 className="text-lg font-medium text-gray-900">
             Availability Settings
           </h3>
           <p className="mt-2 text-sm text-gray-600">
-            Ranges are inclusive. If no available periods are set, service is
-            considered always available (except blocked/booked dates).
+            Define when this service is available. Booked dates are managed
+            automatically.
           </p>
         </div>
 
@@ -476,13 +501,16 @@ export default function ServiceForm({
           </div>
         )}
 
-        {/* Calendar + controls */}
+        {/* Calendar + controls – no type selector, no reason */}
         <div className="border rounded-lg overflow-hidden bg-white shadow-sm">
           <div className="p-4 border-b bg-gray-50">
-            <h4 className="font-medium text-gray-900">Select Period to Add</h4>
+            <h4 className="font-medium text-gray-900">
+              Select Period to Add or Edit
+            </h4>
             <p className="text-sm text-gray-600 mt-1">
-              Click and drag on calendar → optional reason → choose type →
-              add/update
+              Click and drag on calendar to create new available period
+              <br />
+              Click an existing green period to edit or shorten it
             </p>
           </div>
 
@@ -507,27 +535,7 @@ export default function ServiceForm({
                     {format(tempRange[0], "dd MMM yyyy")} →{" "}
                     {format(tempRange[1], "dd MMM yyyy")}
                   </p>
-                  {rangeType !== "available" && (
-                    <Input
-                      value={newRangeReason}
-                      onChange={(e) => setNewRangeReason(e.target.value)}
-                      placeholder="Reason / Note (optional)"
-                      className="mt-1"
-                    />
-                  )}
                 </div>
-
-                <select
-                  value={rangeType}
-                  onChange={(e) =>
-                    setRangeType(e.target.value as typeof rangeType)
-                  }
-                  className="border rounded px-3 py-2 bg-white"
-                >
-                  <option value="available">Available (Green)</option>
-                  <option value="blocked">Blocked (Gray)</option>
-                  <option value="booked">Booked (Red)</option>
-                </select>
 
                 <div className="flex gap-2">
                   <Button
@@ -545,11 +553,10 @@ export default function ServiceForm({
                       addOrUpdateRange(
                         toDateKey(tempRange[0]!),
                         toDateKey(tempRange[1]!),
-                        newRangeReason.trim() || undefined,
                       )
                     }
                   >
-                    {editingIndex !== null ? "Update" : "Add"} Period
+                    {editingIndex !== null ? "Update Period" : "Add Period"}
                   </Button>
                 </div>
               </div>
@@ -557,8 +564,8 @@ export default function ServiceForm({
           )}
         </div>
 
-        {/* Existing ranges */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Existing ranges – only Available + Booked (read-only) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <h4 className="text-sm font-medium text-gray-800 mb-3">
               Available Periods ({form.availability.availableRanges.length})
@@ -567,19 +574,16 @@ export default function ServiceForm({
               {form.availability.availableRanges.map((range, idx) => (
                 <div
                   key={idx}
-                  className="bg-green-50 p-2.5 rounded flex justify-between text-sm items-center border border-green-200"
+                  className="bg-green-50 hover:bg-green-100 transition-colors p-2.5 rounded flex justify-between text-sm items-center border border-green-200 cursor-pointer group"
                 >
                   <span
-                    onClick={() => editRange("available", idx)}
-                    className="cursor-pointer flex-1"
+                    onClick={() => editRange(idx)}
+                    className="flex-1 group-hover:underline"
                   >
-                    {safeFormat(range.from)} – {safeFormat(range.to)}{" "}
-                    {range.reason && (
-                      <span className="text-green-700">({range.reason})</span>
-                    )}
+                    {safeFormat(range.from)} – {safeFormat(range.to)}
                   </span>
                   <button
-                    onClick={() => removeRange("available", idx)}
+                    onClick={() => removeRange(idx)}
                     className="text-red-600 hover:text-red-800"
                   >
                     Remove
@@ -588,71 +592,37 @@ export default function ServiceForm({
               ))}
               {form.availability.availableRanges.length === 0 && (
                 <p className="text-xs text-gray-500 italic">
-                  Always available (unless blocked/booked)
+                  No availability set → service is available by default (except
+                  booked dates)
                 </p>
               )}
             </div>
           </div>
 
           <div>
-            <h4 className="text-sm font-medium text-gray-800 mb-3">
-              Blocked Periods ({form.availability.blockedRanges.length})
-            </h4>
-            <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-              {form.availability.blockedRanges.map((range, idx) => (
-                <div
-                  key={idx}
-                  className="bg-gray-100 p-2.5 rounded flex justify-between text-sm items-center border border-gray-300"
-                >
-                  <span
-                    onClick={() => editRange("blocked", idx)}
-                    className="cursor-pointer flex-1"
-                  >
-                    {format(fromDateKey(range.from), "dd MMM yyyy")} –{" "}
-                    {format(fromDateKey(range.to), "dd MMM yyyy")}{" "}
-                    {range.reason && (
-                      <span className="text-gray-600">({range.reason})</span>
-                    )}
-                  </span>
-                  <button
-                    onClick={() => removeRange("blocked", idx)}
-                    className="text-red-600 hover:text-red-800"
-                  >
-                    Remove
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <h4 className="text-sm font-medium text-gray-800 mb-3">
+            <h4 className="text-sm font-medium text-gray-800 mb-3 flex items-center gap-2">
               Booked Periods ({form.availability.bookedRanges.length})
+              <span className="text-xs text-gray-500 font-normal">
+                (managed automatically)
+              </span>
             </h4>
             <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
               {form.availability.bookedRanges.map((range, idx) => (
                 <div
                   key={idx}
-                  className="bg-red-50 p-2.5 rounded flex justify-between text-sm items-center border border-red-200"
+                  className="bg-red-50/70 p-2.5 rounded flex justify-between text-sm items-center border border-red-200 opacity-90"
                 >
-                  <span
-                    onClick={() => editRange("booked", idx)}
-                    className="cursor-pointer flex-1"
-                  >
+                  <span className="flex-1 cursor-default">
                     {format(fromDateKey(range.from), "dd MMM yyyy")} –{" "}
-                    {format(fromDateKey(range.to), "dd MMM yyyy")}{" "}
-                    {range.reason && (
-                      <span className="text-red-700">({range.reason})</span>
-                    )}
+                    {format(fromDateKey(range.to), "dd MMM yyyy")}
                   </span>
-                  <button
-                    onClick={() => removeRange("booked", idx)}
-                    className="text-red-600 hover:text-red-800"
-                  >
-                    Remove
-                  </button>
                 </div>
               ))}
+              {form.availability.bookedRanges.length === 0 && (
+                <p className="text-xs text-gray-500 italic">
+                  No current bookings
+                </p>
+              )}
             </div>
           </div>
         </div>

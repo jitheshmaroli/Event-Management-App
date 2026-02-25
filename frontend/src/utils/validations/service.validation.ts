@@ -15,7 +15,7 @@ export const serviceSchema = Joi.object<ServiceFormData>({
     }),
   description: Joi.string().min(200).max(3000).trim().required().messages({
     "string.min": "Description must be atleast 200 characters",
-    "string.max": "Descripton cannot exceed more than 3000 characters"
+    "string.max": "Descripton cannot exceed more than 3000 characters",
   }),
   pricePerDay: Joi.number().min(0).required().messages({
     "number.base": "Price must be a number",
@@ -31,7 +31,6 @@ export const serviceSchema = Joi.object<ServiceFormData>({
     }),
   availability: Joi.object({
     availableRanges: Joi.array().items(Joi.any()).optional(),
-    blockedRanges: Joi.array().items(Joi.any()).optional(),
     bookedRanges: Joi.array().items(Joi.any()).optional(),
   }).optional(),
   images: Joi.array().items(Joi.any()).max(6).required(),

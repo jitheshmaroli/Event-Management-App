@@ -64,54 +64,56 @@ export const updateService = createAsyncThunk(
     try {
       const formData = new FormData();
 
-      if (data.title !== undefined) formData.append("title", data.title);
-      if (data.category !== undefined)
-        formData.append("category", data.category);
-      if (data.description !== undefined)
-        formData.append("description", data.description);
-      if (data.pricePerDay !== undefined) {
-        formData.append("pricePerDay", data.pricePerDay.toString());
-      }
-      if (data.location !== undefined)
-        formData.append("location", data.location);
+      if ("title" in data) formData.append("title", data.title!);
+      if ("category" in data) formData.append("category", data.category!);
+      if ("description" in data)
+        formData.append("description", data.description!);
+      if ("pricePerDay" in data)
+        formData.append("pricePerDay", data.pricePerDay!.toString());
+      if ("location" in data) formData.append("location", data.location!);
+      if ("phone" in data) formData.append("phone", data.phone!);
 
-      if (data.phone) {
-        formData.append("phone", data.phone);
-      }
-
-      if (data.availability) {
+      if ("availability" in data && data.availability) {
         const cleaned = {
-          availableRanges: data.availability.availableRanges.map(
+          availableRanges:
+            data.availability.availableRanges?.map(
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              ({ _id, ...rest }) => rest,
+            ) ?? [],
+          // blockedRanges:
+          //   // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          //   data.availability.blockedRanges?.map(({ _id, ...rest }) => rest) ??
+          //   [],
+          bookedRanges:
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            ({ _id, ...rest }) => rest,
-          ),
-          blockedRanges: data.availability.blockedRanges.map(
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            ({ _id, ...rest }) => rest,
-          ),
-          bookedRanges: data.availability.bookedRanges.map(
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            ({ _id, ...rest }) => rest,
-          ),
+            data.availability.bookedRanges?.map(({ _id, ...rest }) => rest) ??
+            [],
         };
         formData.append("availability", JSON.stringify(cleaned));
       }
 
+      // New images
       if (data.images?.length) {
         data.images.forEach((file) => formData.append("images", file));
       }
 
+      // Images to remove
       if (data.removedImages?.length) {
         data.removedImages.forEach((key) =>
           formData.append("removedImages[]", key),
         );
       }
 
-      const response = await api.put(`/admin/service/${id}`, formData);
+      const response = await api.put(`/admin/service/${id}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
 
       return response.data.data;
-    } catch {
-      return rejectWithValue("Failed to update service");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      return rejectWithValue(
+        err.response?.data?.message || "Failed to update service",
+      );
     }
   },
 );

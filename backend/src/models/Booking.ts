@@ -1,6 +1,7 @@
 import { Schema, model, Document, Types } from 'mongoose';
 
 export enum BookingStatus {
+  RESERVED = 'reserved',
   PENDING = 'pending',
   CONFIRMED = 'confirmed',
   CANCELLED = 'cancelled',
@@ -24,6 +25,8 @@ export interface IBooking extends Document {
   numberOfDays: number;
   totalAmount: number;
   status: BookingStatus;
+  reservedUntil?: Date;
+  expiresAt?: Date;
   payment: {
     provider: string;
     referenceId: string;
@@ -50,6 +53,8 @@ const bookingSchema = new Schema<IBooking>(
       enum: Object.values(BookingStatus),
       default: BookingStatus.PENDING,
     },
+    reservedUntil: { type: Date },
+    expiresAt: { type: Date },
     payment: {
       provider: { type: String, required: true },
       referenceId: { type: String, required: true },

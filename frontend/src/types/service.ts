@@ -34,13 +34,11 @@ export interface Service {
 export interface Range {
   from: string;
   to: string;
-  reason?: string;
   _id?: string;
 }
 
 export interface AvailabilitySettings {
   availableRanges: Range[];
-  blockedRanges: Range[];
   bookedRanges: Range[];
 }
 
@@ -79,7 +77,6 @@ export interface ServiceQueryParams {
 export interface MonthAvailability {
   availableDates: string[];
   bookedDates: string[];
-  blockedDates: string[];
 }
 
 export type PriceBreakDownProps = {

@@ -27,3 +27,28 @@ export const normalizeRanges = (
     })) ?? []
   );
 };
+
+//booking
+export function rangesOverlap(
+  aStart: Date,
+  aEnd: Date,
+  bStart: Date,
+  bEnd: Date
+): boolean {
+  return !(aEnd < bStart || aStart > bEnd);
+}
+
+export function isDateInAnyRange(
+  date: Date,
+  ranges: { from: Date; to: Date }[]
+): boolean {
+  return ranges.some((r) => rangesOverlap(date, date, r.from, r.to));
+}
+
+export function hasOverlapWithAnyRange(
+  start: Date,
+  end: Date,
+  ranges: { from: Date; to: Date }[]
+): boolean {
+  return ranges.some((r) => rangesOverlap(start, end, r.from, r.to));
+}

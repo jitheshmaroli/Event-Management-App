@@ -1,5 +1,5 @@
 import { IService } from '@/models/Service';
-import { QueryFilter } from 'mongoose';
+import { ClientSession, QueryFilter, Types } from 'mongoose';
 
 export interface IServiceRepository {
   create(serviceData: IService): Promise<IService>;
@@ -15,4 +15,20 @@ export interface IServiceRepository {
     }
   ): Promise<IService[]>;
   count(filter: QueryFilter<IService>): Promise<number>;
+  addReservationRange(
+    serviceId: string,
+    range: { from: Date; to: Date; bookingId: Types.ObjectId },
+    session?: ClientSession
+  ): Promise<boolean>;
+  finalizeBookingRanges(
+    serviceId: string,
+    bookingId: Types.ObjectId,
+    start: Date,
+    end: Date,
+    session?: ClientSession
+  ): Promise<void>;
+  releaseExpiredReservation(
+    bookingId: Types.ObjectId,
+    session?: ClientSession
+  ): Promise<void>;
 }

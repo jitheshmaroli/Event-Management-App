@@ -10,6 +10,7 @@ import { differenceInDays } from "date-fns";
 import { BOOKING_MAX_DAYS } from "@/constants/booking";
 import { useAppDispatch } from "@/hooks/useAppDispatch";
 import { useAppSelector } from "@/hooks/useAppSelector";
+import { toDateKey } from "@/utils/date";
 
 export default function BookingPage() {
   const { serviceId } = useParams<{ serviceId: string }>();
@@ -47,8 +48,8 @@ export default function BookingPage() {
       const result = await dispatch(
         createBooking({
           serviceId,
-          startDate: startDate.toISOString(),
-          endDate: endDate.toISOString(),
+          startDate: toDateKey(startDate),
+          endDate: toDateKey(endDate),
         }),
       ).unwrap();
 

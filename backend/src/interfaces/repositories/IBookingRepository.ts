@@ -1,5 +1,5 @@
 import { ClientSession } from 'mongoose';
-import { IBooking } from '@/models/Booking';
+import { IBooking, PaymentStatus } from '@/models/Booking';
 
 export interface IBookingRepository {
   create(
@@ -14,6 +14,11 @@ export interface IBookingRepository {
     end: Date,
     excludeId?: string
   ): Promise<IBooking | null>;
+  hasOverlappingBookingOrReservation(
+    serviceId: string,
+    start: Date,
+    end: Date
+  ): Promise<boolean>;
   updateStatus(
     id: string,
     status: string,
@@ -24,4 +29,24 @@ export interface IBookingRepository {
     data: Partial<IBooking['payment']>,
     session?: ClientSession
   ): Promise<IBooking | null>;
+  findByPaymentReferenceId(
+    orderId: string,
+    session?: ClientSession
+  ): Promise<IBooking | null>;
+  confirmBooking(
+    bookingId: string,
+    paymentData: {
+      status: PaymentStatus;
+      referenceId: string;
+    },
+    session?: ClientSession
+  ): Promise<IBooking | null>;
+  markAsFailedById(
+    bookingId: string,
+    session?: ClientSession
+  ): Promise<IBooking | null>;
+  unsetReservationFields(
+    bookingId: string,
+    session?: ClientSession
+  ): Promise<boolean>;
 }

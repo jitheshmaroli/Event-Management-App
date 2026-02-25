@@ -1,5 +1,5 @@
 import { ServiceCategory } from '@/constants/service.constants';
-import { Schema, model } from 'mongoose';
+import { Schema, Types, model } from 'mongoose';
 
 export interface IService {
   title: string;
@@ -14,16 +14,12 @@ export interface IService {
       from: Date;
       to: Date;
     }[];
-    blockedRanges: {
-      from: Date;
-      to: Date;
-      reason?: string;
-    }[];
     bookedRanges: {
       from: Date;
       to: Date;
       reason?: string;
     }[];
+    reservedRanges?: { from: Date; to: Date; bookingId: Types.ObjectId }[];
   };
   createdAt?: Date;
   updatedAt?: Date;
@@ -32,7 +28,12 @@ export interface IService {
 const rangeSchema = new Schema({
   from: { type: Date, required: true },
   to: { type: Date, required: true },
-  reason: { type: String, trim: true, maxlength: 200 },
+});
+
+const reservedRangeSchema = new Schema({
+  from: { type: Date, required: true },
+  to: { type: Date, required: true },
+  bookingId: { type: Schema.Types.ObjectId, ref: 'Booking', required: true },
 });
 
 const serviceSchema = new Schema<IService>(
@@ -46,8 +47,8 @@ const serviceSchema = new Schema<IService>(
     images: [{ type: String }],
     availability: {
       availableRanges: [rangeSchema],
-      blockedRanges: [rangeSchema],
       bookedRanges: [rangeSchema],
+      reservedRanges: [reservedRangeSchema],
     },
   },
   { timestamps: true }
