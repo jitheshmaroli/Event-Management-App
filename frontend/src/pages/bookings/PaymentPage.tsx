@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useAppDispatch } from "@/hooks/useAppDispatch";
 import { verifyPayment } from "@/features/bookings/bookingThunks";
 import { loadRazorpayScript } from "@/utils/razorpayLoader";
-import { RAZORPAY_KEY_ID } from "@/constants/booking";
+import { RAZORPAY_KEY_ID } from "@/constants/booking.constants";
 import { showError, showSuccess } from "@/utils/toast";
 import api from "@/lib/api";
 

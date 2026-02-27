@@ -1,14 +1,5 @@
-import type { Service } from "@/types/service";
-
-export const BookingStatus = {
-  PENDING: "pending",
-  CONFIRMED: "confirmed",
-  CANCELLED: "cancelled",
-  COMPLETED: "completed",
-  FAILED: "failed",
-} as const;
-
-export type BookingStatus = (typeof BookingStatus)[keyof typeof BookingStatus];
+import type { BookingStatus } from "@/constants/booking.constants";
+import type { Service } from "./service.types";
 
 export interface Booking {
   _id: string;

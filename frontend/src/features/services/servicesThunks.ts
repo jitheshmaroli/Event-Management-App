@@ -1,5 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import api from "@/lib/api";
-import type { ServiceFormData, ServiceQueryParams } from "@/types/service";
+import type {
+  ServiceFormData,
+  ServiceQueryParams,
+} from "@/types/service.types";
+import type { PaginatedResponse } from "@/types/service.types";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 
 export const fetchServices = createAsyncThunk(
@@ -7,9 +12,11 @@ export const fetchServices = createAsyncThunk(
   async (query: ServiceQueryParams = {}, { rejectWithValue }) => {
     try {
       const response = await api.get("/service", { params: query });
-      return response.data.data;
-    } catch {
-      return rejectWithValue("Failed to load services");
+      return response.data.data as PaginatedResponse<any>;
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to load services",
+      );
     }
   },
 );
@@ -80,10 +87,6 @@ export const updateService = createAsyncThunk(
               // eslint-disable-next-line @typescript-eslint/no-unused-vars
               ({ _id, ...rest }) => rest,
             ) ?? [],
-          // blockedRanges:
-          //   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          //   data.availability.blockedRanges?.map(({ _id, ...rest }) => rest) ??
-          //   [],
           bookedRanges:
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             data.availability.bookedRanges?.map(({ _id, ...rest }) => rest) ??
@@ -109,7 +112,6 @@ export const updateService = createAsyncThunk(
       });
 
       return response.data.data;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       return rejectWithValue(
         err.response?.data?.message || "Failed to update service",

@@ -1,5 +1,5 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
-import type { MonthAvailability, Service } from "@/types/service";
+import type { MonthAvailability, Service } from "@/types/service.types";
 import {
   createService,
   deleteService,
@@ -39,9 +39,14 @@ const servicesSlice = createSlice({
     setCurrentService: (state, action: PayloadAction<Service | null>) => {
       state.currentService = action.payload;
     },
+    clearServicesError: (state) => {
+      state.error = null;
+    },
+    resetServices: () => initialState,
   },
   extraReducers: (builder) => {
     builder
+      //fetch services
       .addCase(fetchServices.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -56,13 +61,33 @@ const servicesSlice = createSlice({
         state.error = action.payload as string;
       })
 
-      // create
+      // Create Service
+      .addCase(createService.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
       .addCase(createService.fulfilled, (state, action) => {
-        state.services.push(action.payload);
+        state.loading = false;
+        state.services.unshift(action.payload);
+        if (state.pagination) {
+          state.pagination.total += 1;
+          state.pagination.pages = Math.ceil(
+            state.pagination.total / state.pagination.limit,
+          );
+        }
+      })
+      .addCase(createService.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
       })
 
-      // update
+      // Update Service
+      .addCase(updateService.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
       .addCase(updateService.fulfilled, (state, action) => {
+        state.loading = false;
         const index = state.services.findIndex(
           (s) => s._id === action.payload._id,
         );
@@ -71,18 +96,38 @@ const servicesSlice = createSlice({
           state.currentService = action.payload;
         }
       })
+      .addCase(updateService.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
 
-      // delete
+      // Delete Service
+      .addCase(deleteService.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
       .addCase(deleteService.fulfilled, (state, action) => {
+        state.loading = false;
         state.services = state.services.filter((s) => s._id !== action.payload);
         if (state.currentService?._id === action.payload) {
           state.currentService = null;
         }
+        if (state.pagination) {
+          state.pagination.total -= 1;
+          state.pagination.pages = Math.ceil(
+            state.pagination.total / state.pagination.limit,
+          );
+        }
+      })
+      .addCase(deleteService.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
       })
 
       //fethc by id
       .addCase(fetchServiceById.pending, (state) => {
         state.loading = true;
+        state.error = null;
       })
       .addCase(fetchServiceById.fulfilled, (state, action) => {
         state.loading = false;
@@ -96,6 +141,7 @@ const servicesSlice = createSlice({
       // fetch availability
       .addCase(fetchAvailability.pending, (state) => {
         state.loading = true;
+        state.error = null;
       })
       .addCase(fetchAvailability.fulfilled, (state, action) => {
         state.loading = false;
@@ -109,6 +155,7 @@ const servicesSlice = createSlice({
   },
 });
 
-export const { setCurrentService } = servicesSlice.actions;
+export const { setCurrentService, clearServicesError, resetServices } =
+  servicesSlice.actions;
 
 export default servicesSlice.reducer;

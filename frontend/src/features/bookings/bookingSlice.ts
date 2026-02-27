@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createSlice } from "@reduxjs/toolkit";
 import { createBooking, verifyPayment, cancelBooking, fetchUserBookings } from "./bookingThunks";
-import type { Booking } from "./types";
+import type { Booking } from "@/types/booking.types";
 
 interface BookingState {
   currentBooking: { booking: Booking; order: any } | null;

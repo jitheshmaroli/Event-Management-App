@@ -31,14 +31,16 @@ export default function Unauthorized() {
             <>
               <Link
                 to="/dashboard"
-                className="inline-flex items-center px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition transform hover:scale-105 shadow-lg">
+                className="inline-flex items-center px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition transform hover:scale-105 shadow-lg"
+              >
                 <Home className="mr-2 h-5 w-5" />
                 Go to Dashboard
               </Link>
 
               <Link
                 to="/"
-                className="inline-flex items-center px-8 py-4 bg-white/10 backdrop-blur-md border border-white/20 text-white font-medium rounded-xl hover:bg-white/20 transition">
+                className="inline-flex items-center px-8 py-4 bg-white/10 backdrop-blur-md border border-white/20 text-white font-medium rounded-xl hover:bg-white/20 transition"
+              >
                 <ArrowLeft className="mr-2 h-5 w-5" />
                 Back to Home
               </Link>
@@ -47,13 +49,15 @@ export default function Unauthorized() {
             <>
               <Link
                 to="/login"
-                className="inline-flex items-center px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition transform hover:scale-105 shadow-lg">
+                className="inline-flex items-center px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition transform hover:scale-105 shadow-lg"
+              >
                 Sign In
               </Link>
 
               <Link
                 to="/register"
-                className="inline-flex items-center px-8 py-4 bg-white/10 backdrop-blur-md border border-white/20 text-white font-medium rounded-xl hover:bg-white/20 transition">
+                className="inline-flex items-center px-8 py-4 bg-white/10 backdrop-blur-md border border-white/20 text-white font-medium rounded-xl hover:bg-white/20 transition"
+              >
                 Create Account
               </Link>
             </>

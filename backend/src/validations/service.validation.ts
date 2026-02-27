@@ -94,10 +94,10 @@ export const updateServiceSchema = Joi.object({
 export const serviceQuerySchema = Joi.object({
   search: Joi.string().trim().max(100).allow(''),
   category: Joi.string().lowercase().allow(''),
-  location: Joi.string().trim().max(80).allow(''),
   minPrice: Joi.number().min(0).allow(''),
-  maxPrice: Joi.number().min(Joi.ref('minPrice')).allow(''),
-  date: Joi.date().iso().allow(''),
+  maxPrice: Joi.number().min(0).allow(''),
+  dateFrom: Joi.date().iso().allow(''),
+  dateTo: Joi.date().iso().allow(''),
   page: Joi.number().integer().min(1).default(1),
   limit: Joi.number().integer().min(4).max(50).default(12),
   sort: Joi.string()

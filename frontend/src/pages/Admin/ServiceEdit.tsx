@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { useAppSelector } from "@/hooks/useAppSelector";
 import ServiceForm from "@/components/admin/ServiceForm";
 import { useAppDispatch } from "@/hooks/useAppDispatch";
-import type { ServiceFormData } from "@/types/service";
+import type { ServiceFormData } from "@/types/service.types";
 import { Button } from "@/components/ui/Button";
 import {
   fetchServiceById,
