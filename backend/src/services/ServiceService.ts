@@ -2,6 +2,7 @@ import {
   CreateServiceInput,
   UpdateServiceInput,
   ServiceQueryParams,
+  PaginatedResponse,
 } from '@/dtos/service/service.dto';
 import { IServiceRepository } from '@/interfaces/repositories/IServiceRepository';
 import { IServiceService } from '@/interfaces/services/IServiceService';
@@ -18,7 +19,13 @@ import {
   toUtcMidnight,
 } from '@/utils/date.utils';
 import logger from '@/utils/logger';
-import { FIXED_IMAGE_COUNT } from '@/constants/service.constants';
+import {
+  DEFAULT_LIMIT,
+  DEFAULT_PAGE,
+  FIXED_IMAGE_COUNT,
+  SORT_MAPPING,
+  SortOption,
+} from '@/constants/service.constants';
 
 @injectable()
 export class ServiceService implements IServiceService {
@@ -103,81 +110,19 @@ export class ServiceService implements IServiceService {
     return updated;
   }
 
-  async findMany(query: ServiceQueryParams): Promise<{
-    services: Array<IService & { signedImages?: string[] }>;
-    pagination: { page: number; limit: number; total: number; pages: number };
-  }> {
-    const {
-      search,
-      category,
-      location,
-      minPrice,
-      maxPrice,
-      date,
-      page = 1,
-      limit = 12,
-      sort = 'newest',
-    } = query;
-
-    const filter: QueryFilter<IService> = {};
-
-    if (search?.trim()) {
-      filter.$text = { $search: search.trim() };
-    }
-
-    if (category) {
-      filter.category = category.toLowerCase();
-    }
-
-    if (location?.trim()) {
-      filter.location = { $regex: location.trim(), $options: 'i' };
-    }
-
-    if (minPrice !== undefined || maxPrice !== undefined) {
-      filter.pricePerDay = {};
-      if (minPrice !== undefined) filter.pricePerDay.$gte = minPrice;
-      if (maxPrice !== undefined) filter.pricePerDay.$lte = maxPrice;
-    }
-
-    if (date) {
-      const target = toUtcMidnight(date);
-
-      filter.$and = [
-        {
-          $or: [
-            { 'availability.availableRanges.0': { $exists: false } },
-            {
-              'availability.availableRanges': {
-                $elemMatch: {
-                  from: { $lte: target },
-                  to: { $gte: target },
-                },
-              },
-            },
-          ],
-        },
-        {
-          'availability.bookedRanges': {
-            $not: {
-              $elemMatch: {
-                from: { $lte: target },
-                to: { $gte: target },
-              },
-            },
-          },
-        },
-      ];
-    }
-
-    let sortOption: Record<string, 1 | -1> = { createdAt: -1 };
-    if (sort === 'price_asc') sortOption = { pricePerDay: 1 };
-    if (sort === 'price_desc') sortOption = { pricePerDay: -1 };
-    if (sort === 'oldest') sortOption = { createdAt: 1 };
-
+  async findMany(
+    query: ServiceQueryParams
+  ): Promise<PaginatedResponse<IService & { signedImages?: string[] }>> {
+    const page = Number(query.page) || DEFAULT_PAGE;
+    const limit = Number(query.limit) || DEFAULT_LIMIT;
     const skip = (page - 1) * limit;
 
+    const filter = this.buildFilter(query);
+
+    const sort = SORT_MAPPING[query.sort as SortOption] || SORT_MAPPING.newest;
+
     const [services, total] = await Promise.all([
-      this.serviceRepo.findMany(filter, { skip, limit, sort: sortOption }),
+      this.serviceRepo.findMany(filter, { skip, limit, sort }),
       this.serviceRepo.count(filter),
     ]);
 
@@ -200,6 +145,120 @@ export class ServiceService implements IServiceService {
         pages: Math.ceil(total / limit),
       },
     };
+  }
+
+  private buildFilter(query: ServiceQueryParams): QueryFilter<IService> {
+    const filter: QueryFilter<IService> = {};
+    const { search, category, minPrice, maxPrice, dateFrom, dateTo } = query;
+
+    if (search?.trim()) {
+      const searchTerm = search.trim();
+
+      filter.title = { $regex: searchTerm, $options: 'i' };
+    }
+
+    if (category) {
+      filter.category = category.toLowerCase();
+    }
+
+    if (minPrice !== undefined || maxPrice !== undefined) {
+      filter.pricePerDay = {};
+      if (minPrice !== undefined) {
+        filter.pricePerDay.$gte = Number(minPrice);
+      }
+      if (maxPrice !== undefined) {
+        filter.pricePerDay.$lte = Number(maxPrice);
+      }
+    }
+
+    if (dateFrom || dateTo) {
+      const conditions: QueryFilter<IService>[] = [];
+
+      const bookedCondition = {
+        'availability.bookedRanges': {
+          $not: {
+            $elemMatch: {
+              $or: [
+                {
+                  from: { $lte: toUtcMidnight(dateTo || '2099-12-31') },
+                  to: { $gte: toUtcMidnight(dateFrom || '2000-01-01') },
+                },
+              ],
+            },
+          },
+        },
+      };
+
+      if (dateFrom && dateTo) {
+        const start = toUtcMidnight(dateFrom);
+        const end = toUtcMidnight(dateTo);
+
+        conditions.push({
+          $and: [
+            bookedCondition,
+            {
+              $or: [
+                { 'availability.availableRanges.0': { $exists: false } },
+                {
+                  'availability.availableRanges': {
+                    $elemMatch: {
+                      from: { $lte: start },
+                      to: { $gte: end },
+                    },
+                  },
+                },
+              ],
+            },
+          ],
+        });
+      } else if (dateFrom) {
+        const start = toUtcMidnight(dateFrom);
+
+        conditions.push({
+          $and: [
+            bookedCondition,
+            {
+              $or: [
+                { 'availability.availableRanges.0': { $exists: false } },
+                {
+                  'availability.availableRanges': {
+                    $elemMatch: {
+                      to: { $gte: start },
+                    },
+                  },
+                },
+              ],
+            },
+          ],
+        });
+      } else if (dateTo) {
+        const end = toUtcMidnight(dateTo);
+
+        conditions.push({
+          $and: [
+            bookedCondition,
+            {
+              $or: [
+                { 'availability.availableRanges.0': { $exists: false } },
+                {
+                  'availability.availableRanges': {
+                    $elemMatch: {
+                      from: { $lte: end },
+                    },
+                  },
+                },
+              ],
+            },
+          ],
+        });
+      }
+
+      if (conditions.length > 0) {
+        filter.$and = conditions;
+      }
+    }
+
+    return filter;
   }
 
   async findById(id: string): Promise<IService & { signedImages?: string[] }> {

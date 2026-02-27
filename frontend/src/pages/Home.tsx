@@ -2,7 +2,6 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   Search,
   Calendar,
-  MapPin,
   DollarSign,
   Users,
   Music,
@@ -72,25 +71,6 @@ export default function Home() {
               </div>
 
               <div className="relative">
-                <MapPin
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-300"
-                  size={20}
-                />
-                <select
-                  name="location"
-                  value={quickSearch.location}
-                  onChange={handleQuickSearchChange}
-                  className="w-full pl-12 pr-4 py-4 bg-white/20 border border-white/30 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-400 appearance-none"
-                >
-                  <option value="">Location</option>
-                  <option>Mumbai</option>
-                  <option>Delhi</option>
-                  <option>Bangalore</option>
-                  <option>Pune</option>
-                </select>
-              </div>
-
-              <div className="relative">
                 <Calendar
                   className="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-300"
                   size={20}
@@ -100,6 +80,7 @@ export default function Home() {
                   type="date"
                   value={quickSearch.date}
                   onChange={handleQuickSearchChange}
+                  min={new Date().toISOString().split("T")[0]}
                   className="w-full pl-12 pr-4 py-4 bg-white/20 border border-white/30 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-400"
                 />
               </div>
@@ -134,47 +115,55 @@ export default function Home() {
               {
                 icon: Utensils,
                 title: "Caterers",
+                value: "catering",
                 color: "bg-emerald-100 text-emerald-700",
               },
               {
                 icon: Camera,
                 title: "Photographers",
+                value: "photography",
                 color: "bg-blue-100 text-blue-700",
               },
               {
                 icon: Music,
                 title: "DJs & Music",
+                value: "music",
                 color: "bg-purple-100 text-purple-700",
               },
               {
                 icon: Users,
                 title: "Marriage Venues",
+                value: "venue",
                 color: "bg-pink-100 text-pink-700",
               },
               {
                 icon: Calendar,
                 title: "Hotels & Resorts",
+                value: "venue",
                 color: "bg-amber-100 text-amber-700",
               },
               {
                 icon: DollarSign,
                 title: "Decorators",
+                value: "decoration",
                 color: "bg-cyan-100 text-cyan-700",
               },
               {
                 icon: Users,
                 title: "Makeup Artists",
+                value: "makeup",
                 color: "bg-rose-100 text-rose-700",
               },
               {
                 icon: Calendar,
                 title: "Event Planners",
+                value: "planning",
                 color: "bg-indigo-100 text-indigo-700",
               },
             ].map((category, index) => (
               <Link
                 key={index}
-                to={`/services?category=${category.title}`}
+                to={`/services?category=${category.value}`}
                 className="group bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100"
               >
                 <div
@@ -205,7 +194,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Trust / Stats section (optional bonus look) */}
+      {/* Trust / Stats section */}
       <section className="py-20 bg-gradient-to-r from-indigo-50 to-purple-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">

@@ -1,4 +1,4 @@
-import type { PriceBreakDownProps } from "@/types/service";
+import type { PriceBreakDownProps } from "@/types/service.types";
 
 export default function PriceBreakdown({ amount, days }: PriceBreakDownProps) {
   return (

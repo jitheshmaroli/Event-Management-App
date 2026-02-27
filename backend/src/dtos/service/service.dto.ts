@@ -3,10 +3,10 @@ import { ServiceCategory } from '@/constants/service.constants';
 export interface ServiceQueryParams {
   search?: string;
   category?: ServiceCategory;
-  location?: string;
   minPrice?: number;
   maxPrice?: number;
-  date?: string;
+  dateFrom?: string;
+  dateTo?: string;
   page?: number;
   limit?: number;
   sort?: string;
@@ -44,4 +44,14 @@ export interface UpdateServiceInput {
   removedImages?: string[];
   phone?: string;
   availability?: AvailabilityInput;
+}
+
+export interface PaginatedResponse<T> {
+  services: T[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
 }

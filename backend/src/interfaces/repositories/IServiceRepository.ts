@@ -8,7 +8,7 @@ export interface IServiceRepository {
   findById(id: string): Promise<IService | null>;
   findMany(
     filter: QueryFilter<IService>,
-    options?: {
+    options: {
       skip?: number;
       limit?: number;
       sort?: Record<string, 1 | -1>;

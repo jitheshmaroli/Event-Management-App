@@ -3,7 +3,7 @@ import { useAppSelector } from "@/hooks/useAppSelector";
 import { createService } from "@/features/services/servicesThunks";
 import ServiceForm from "@/components/admin/ServiceForm";
 import { useAppDispatch } from "@/hooks/useAppDispatch";
-import type { ServiceFormData } from "@/types/service";
+import type { ServiceFormData } from "@/types/service.types";
 
 export default function ServiceCreate() {
   const dispatch = useAppDispatch();

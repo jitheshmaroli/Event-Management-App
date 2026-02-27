@@ -22,7 +22,6 @@ api.interceptors.response.use(
         return api(originalRequest);
       } catch (refreshError) {
         console.log("Refresh failed → going to login", refreshError);
-        // window.location.href = "/login";
         return Promise.reject(refreshError);
       }
     }

@@ -1,9 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import {
-  SERVICE_CATEGORIES,
-  type ServiceFormData,
-  type Range,
-} from "@/types/service";
+import { type ServiceFormData, type Range } from "@/types/service.types";
 import { Input } from "../ui/Input";
 import { Textarea } from "../ui/TextArea";
 import ServiceImageUploader from "./ServiceImageUploader";
@@ -19,7 +15,8 @@ import {
 } from "@/utils/date";
 import { serviceSchema } from "@/utils/validations/service.validation";
 import { cn } from "@/lib/utils";
-import { FIXED_IMAGE_COUNT } from "@/constants/service";
+import { FIXED_IMAGE_COUNT } from "@/constants/service.constants";
+import { SERVICE_CATEGORIES } from "@/constants/service.constants";
 
 interface Props {
   initialData?: Partial<ServiceFormData>;

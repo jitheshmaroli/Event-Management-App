@@ -1,4 +1,5 @@
-import { SERVICE_CATEGORIES, type ServiceFormData } from "@/types/service";
+import { SERVICE_CATEGORIES } from "@/constants/service.constants";
+import { type ServiceFormData } from "@/types/service.types";
 import Joi from "joi";
 
 export const serviceSchema = Joi.object<ServiceFormData>({

@@ -7,7 +7,7 @@ import PriceBreakdown from "@/components/booking/PriceBreakDown";
 import { Button } from "@/components/ui/Button";
 import { showError } from "@/utils/toast";
 import { differenceInDays } from "date-fns";
-import { BOOKING_MAX_DAYS } from "@/constants/booking";
+import { BOOKING_MAX_DAYS } from "@/constants/booking.constants";
 import { useAppDispatch } from "@/hooks/useAppDispatch";
 import { useAppSelector } from "@/hooks/useAppSelector";
 import { toDateKey } from "@/utils/date";
