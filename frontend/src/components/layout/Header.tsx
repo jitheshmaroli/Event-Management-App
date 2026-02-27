@@ -37,13 +37,41 @@ export default function Header() {
 
           {/* Navigation - shown only when authenticated */}
           <nav className="hidden md:flex items-center gap-8">
-            {isAuthenticated && (
-              <Link
-                to={user?.role === "admin" ? "/admin/dashboard" : "/dashboard"}
-                className="text-gray-700 hover:text-indigo-600 font-medium transition-colors flex items-center gap-1">
-                <LayoutDashboard size={18} />
-                Dashboard
-              </Link>
+            {isAuthenticated && user?.role === "user" && (
+              <>
+                <Link
+                  to="/services"
+                  className="text-gray-700 hover:text-indigo-600 font-medium transition-colors flex items-center gap-1"
+                >
+                  <LayoutDashboard size={18} />
+                  Services
+                </Link>
+                <Link
+                  to="/My-bookings"
+                  className="text-gray-700 hover:text-indigo-600 font-medium transition-colors flex items-center gap-1"
+                >
+                  <LayoutDashboard size={18} />
+                  My Bookings
+                </Link>
+              </>
+            )}
+            {isAuthenticated && user?.role === "admin" && (
+              <>
+                <Link
+                  to="/admin/dashboard"
+                  className="text-gray-700 hover:text-indigo-600 font-medium transition-colors flex items-center gap-1"
+                >
+                  <LayoutDashboard size={18} />
+                  Dashboard
+                </Link>
+                <Link
+                  to="/admin/services"
+                  className="text-gray-700 hover:text-indigo-600 font-medium transition-colors flex items-center gap-1"
+                >
+                  <LayoutDashboard size={18} />
+                  Services
+                </Link>
+              </>
             )}
           </nav>
 
@@ -71,7 +99,8 @@ export default function Header() {
                 <button
                   onClick={handleLogout}
                   disabled={isLoading}
-                  className="px-4 py-2 bg-red-50 text-red-700 hover:bg-red-100 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                  className="px-4 py-2 bg-red-50 text-red-700 hover:bg-red-100 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
                   <LogOut size={16} />
                   Logout
                 </button>
@@ -80,12 +109,14 @@ export default function Header() {
               <div className="flex items-center gap-4">
                 <Link
                   to="/login"
-                  className="text-gray-700 hover:text-indigo-600 font-medium transition-colors">
+                  className="text-gray-700 hover:text-indigo-600 font-medium transition-colors"
+                >
                   Sign in
                 </Link>
                 <Link
                   to="/register"
-                  className="px-5 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium shadow-sm">
+                  className="px-5 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium shadow-sm"
+                >
                   Sign up
                 </Link>
               </div>

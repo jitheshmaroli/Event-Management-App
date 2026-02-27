@@ -26,7 +26,10 @@ export class BookingRepository implements IBookingRepository {
   async findByUser(userId: string, status?: string): Promise<IBooking[]> {
     const query: any = { user: userId };
     if (status) query.status = status;
-    return Booking.find(query).sort({ createdAt: -1 }).lean();
+    return Booking.find(query)
+      .populate('service')
+      .sort({ createdAt: -1 })
+      .lean();
   }
 
   async findOverlapping(
