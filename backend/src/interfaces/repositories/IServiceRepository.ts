@@ -1,20 +1,8 @@
+import { ClientSession, Types } from 'mongoose';
+import { IBaseRepository } from './IBaseRepository';
 import { IService } from '@/models/Service';
-import { ClientSession, QueryFilter, Types } from 'mongoose';
 
-export interface IServiceRepository {
-  create(serviceData: IService): Promise<IService>;
-  updateById(id: string, update: Partial<IService>): Promise<IService | null>;
-  deleteById(id: string): Promise<boolean>;
-  findById(id: string): Promise<IService | null>;
-  findMany(
-    filter: QueryFilter<IService>,
-    options: {
-      skip?: number;
-      limit?: number;
-      sort?: Record<string, 1 | -1>;
-    }
-  ): Promise<IService[]>;
-  count(filter: QueryFilter<IService>): Promise<number>;
+export interface IServiceRepository extends IBaseRepository<IService> {
   addReservationRange(
     serviceId: string,
     range: { from: Date; to: Date; bookingId: Types.ObjectId },

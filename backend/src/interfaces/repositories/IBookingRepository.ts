@@ -1,12 +1,8 @@
 import { ClientSession } from 'mongoose';
 import { IBooking, PaymentStatus } from '@/models/Booking';
+import { IBaseRepository } from './IBaseRepository';
 
-export interface IBookingRepository {
-  create(
-    booking: Partial<IBooking>,
-    session?: ClientSession
-  ): Promise<IBooking>;
-  findById(id: string): Promise<IBooking | null>;
+export interface IBookingRepository extends IBaseRepository<IBooking> {
   findByUser(userId: string, status?: string): Promise<IBooking[]>;
   findOverlapping(
     serviceId: string,
