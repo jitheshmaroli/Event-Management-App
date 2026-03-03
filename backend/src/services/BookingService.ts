@@ -25,10 +25,10 @@ import { toUtcMidnight } from '@/utils/date.utils';
 @injectable()
 export class BookingService implements IBookingService {
   constructor(
-    @inject(TYPES.BookingRepository) private bookingRepo: IBookingRepository,
-    @inject(TYPES.ServiceRepository) private serviceRepo: IServiceRepository,
-    @inject(TYPES.ServiceService) private serviceService: IServiceService,
-    @inject(TYPES.PaymentFactory) private paymentFactory: PaymentFactory
+    @inject(TYPES.BookingRepository) private _bookingRepo: IBookingRepository,
+    @inject(TYPES.ServiceRepository) private _serviceRepo: IServiceRepository,
+    @inject(TYPES.ServiceService) private _serviceService: IServiceService,
+    @inject(TYPES.PaymentFactory) private _paymentFactory: PaymentFactory
   ) {}
 
   async createBooking({
@@ -56,11 +56,11 @@ export class BookingService implements IBookingService {
       }
       if (days < 1) throw new BadRequestError('Invalid date range');
 
-      const service = await this.serviceService.findById(serviceId);
+      const service = await this._serviceService.findById(serviceId);
       if (!service) throw new NotFoundError('Service not found');
 
       const hasConflict =
-        await this.bookingRepo.hasOverlappingBookingOrReservation(
+        await this._bookingRepo.hasOverlappingBookingOrReservation(
           serviceId,
           start,
           end
@@ -72,7 +72,7 @@ export class BookingService implements IBookingService {
 
       const totalAmount = service.pricePerDay * days;
 
-      const paymentService = this.paymentFactory.getProvider('razorpay');
+      const paymentService = this._paymentFactory.getProvider('razorpay');
       const order = await paymentService.createOrder(
         totalAmount,
         `booking-user-${userId}`
@@ -84,7 +84,7 @@ export class BookingService implements IBookingService {
 
       const expiresAt = addMinutes(new Date(), RESERVED_TIMEOUT_MINUTES);
 
-      const booking = await this.bookingRepo.create(
+      const booking = await this._bookingRepo.create(
         {
           user: new Types.ObjectId(userId),
           service: new Types.ObjectId(serviceId),
@@ -106,7 +106,7 @@ export class BookingService implements IBookingService {
         session
       );
 
-      const reservationAdded = await this.serviceRepo.addReservationRange(
+      const reservationAdded = await this._serviceRepo.addReservationRange(
         serviceId,
         {
           from: start,
@@ -146,7 +146,7 @@ export class BookingService implements IBookingService {
     session.startTransaction();
 
     try {
-      const booking = await this.bookingRepo.findByPaymentReferenceId(
+      const booking = await this._bookingRepo.findByPaymentReferenceId(
         orderId,
         session
       );
@@ -167,14 +167,14 @@ export class BookingService implements IBookingService {
         throw new BadRequestError('Reservation timeout expired');
       }
 
-      const paymentService = this.paymentFactory.getProvider(
+      const paymentService = this._paymentFactory.getProvider(
         booking.payment?.provider || 'razorpay'
       );
 
       const isValid = await paymentService.verifyPayment(paymentData);
 
       if (!isValid) {
-        await this.bookingRepo.markAsFailedById(
+        await this._bookingRepo.markAsFailedById(
           booking._id.toString(),
           session
         );
@@ -182,7 +182,7 @@ export class BookingService implements IBookingService {
       }
 
       // Confirm booking + unset reservation fields + update payment
-      const confirmedBooking = await this.bookingRepo.confirmBooking(
+      const confirmedBooking = await this._bookingRepo.confirmBooking(
         booking._id.toString(),
         {
           status: PaymentStatus.SUCCESS,
@@ -196,7 +196,7 @@ export class BookingService implements IBookingService {
       }
 
       // Finalize ranges (reserved → booked)
-      await this.serviceRepo.finalizeBookingRanges(
+      await this._serviceRepo.finalizeBookingRanges(
         booking.service.toString(),
         booking._id,
         booking.startDate,
@@ -216,7 +216,7 @@ export class BookingService implements IBookingService {
   }
 
   async cancelBooking(bookingId: string, userId: string) {
-    const booking = await this.bookingRepo.findById(bookingId);
+    const booking = await this._bookingRepo.findById(bookingId);
     if (!booking) throw new NotFoundError('Booking not found');
 
     if (booking.user.toString() !== userId) {
@@ -236,7 +236,7 @@ export class BookingService implements IBookingService {
 
     const refundAmount = Math.round(booking.totalAmount * REFUND_PERCENTAGE);
 
-    const paymentService = this.paymentFactory.getProvider(
+    const paymentService = this._paymentFactory.getProvider(
       booking.payment?.provider || 'razorpay'
     );
 
@@ -245,14 +245,14 @@ export class BookingService implements IBookingService {
       refundAmount
     );
 
-    const updated = await this.bookingRepo.updateStatus(
+    const updated = await this._bookingRepo.updateStatus(
       bookingId,
       BookingStatus.CANCELLED
     );
 
     if (!updated) throw new Error('Failed to update booking status');
 
-    await this.bookingRepo.updatePaymentStatus(
+    await this._bookingRepo.updatePaymentStatus(
       booking.payment?.referenceId || '',
       {
         refundReferenceId: refund.id,
@@ -266,7 +266,7 @@ export class BookingService implements IBookingService {
   async markAsFailed(
     bookingId: string
   ): Promise<IBooking | { message: string }> {
-    const booking = await this.bookingRepo.findById(bookingId);
+    const booking = await this._bookingRepo.findById(bookingId);
     if (!booking) throw new NotFoundError('Booking not found');
 
     if (
@@ -276,17 +276,17 @@ export class BookingService implements IBookingService {
       return { message: 'Booking already processed' };
     }
 
-    const updated = await this.bookingRepo.markAsFailedById(bookingId);
+    const updated = await this._bookingRepo.markAsFailedById(bookingId);
     if (!updated) throw new NotFoundError('Failed to update booking');
 
     if (booking.status === BookingStatus.RESERVED) {
-      await this.bookingRepo.unsetReservationFields(bookingId);
+      await this._bookingRepo.unsetReservationFields(bookingId);
     }
 
     return updated;
   }
 
   async getUserBookings(userId: string): Promise<IBooking[]> {
-    return this.bookingRepo.findByUser(userId);
+    return this._bookingRepo.findByUser(userId);
   }
 }

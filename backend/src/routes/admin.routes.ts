@@ -12,9 +12,13 @@ import {
   updateServiceSchema,
 } from '@/validations/service.validation';
 import { parseMultipartJson } from '@/middlewares/parseMultipartJson';
+import { AdminController } from '@/controllers/AdminController';
 
 const router = Router();
-const controller = container.get<ServiceController>(TYPES.ServiceController);
+const serviceController = container.get<ServiceController>(
+  TYPES.ServiceController
+);
+const adminController = container.get<AdminController>(TYPES.AdminController);
 
 router.use(authenticate, restrictTo(ROLES.ADMIN));
 
@@ -24,7 +28,7 @@ router.post(
   uploadServiceImages,
   parseMultipartJson(['availability']),
   validateRequest(createServiceSchema, 'body'),
-  controller.createService.bind(controller)
+  serviceController.createService.bind(serviceController)
 );
 router.put(
   '/service/:serviceId',
@@ -32,12 +36,17 @@ router.put(
   parseMultipartJson(['availability']),
   validateRequest(serviceIdSchema, 'params'),
   validateRequest(updateServiceSchema, 'body'),
-  controller.updateService.bind(controller)
+  serviceController.updateService.bind(serviceController)
 );
 router.delete(
   '/service/:serviceId',
   validateRequest(serviceIdSchema, 'params'),
-  controller.deleteService.bind(controller)
+  serviceController.deleteService.bind(serviceController)
 );
+
+//dashboard
+router.get('/dashboard', adminController.getDashboard.bind(adminController));
+router.get('/users', adminController.getUsers.bind(adminController));
+router.get('/bookings', adminController.getBookings.bind(adminController));
 
 export default router;

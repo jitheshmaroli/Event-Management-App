@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   ClientSession,
   UpdateQuery,
@@ -20,7 +21,8 @@ export interface IBaseRepository<T> {
       skip?: number;
       limit?: number;
       sort?: Record<string, 1 | -1 | string>;
-      populate?: string | string[];
+      populate?: any;
+      projection?: any;
       session?: ClientSession;
     }
   ): Promise<T[]>;

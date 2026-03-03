@@ -30,13 +30,13 @@ import {
 @injectable()
 export class ServiceService implements IServiceService {
   constructor(
-    @inject(TYPES.ServiceRepository) private serviceRepo: IServiceRepository
+    @inject(TYPES.ServiceRepository) private _serviceRepo: IServiceRepository
   ) {}
 
   async create(data: CreateServiceInput): Promise<IService> {
     const { availability } = data;
 
-    return this.serviceRepo.create({
+    return this._serviceRepo.create({
       ...data,
       availability: {
         availableRanges: normalizeRanges(availability?.availableRanges),
@@ -47,7 +47,7 @@ export class ServiceService implements IServiceService {
   }
 
   async update(id: string, data: UpdateServiceInput): Promise<IService> {
-    const service = await this.serviceRepo.findById(id);
+    const service = await this._serviceRepo.findById(id);
     if (!service) throw new NotFoundError('Service not found');
 
     const updateData: Partial<IService> = {};
@@ -104,7 +104,7 @@ export class ServiceService implements IServiceService {
 
     updateData.images = finalImages;
 
-    const updated = await this.serviceRepo.updateById(id, updateData);
+    const updated = await this._serviceRepo.updateById(id, updateData);
     if (!updated) throw new NotFoundError('Update failed');
 
     return updated;
@@ -122,8 +122,8 @@ export class ServiceService implements IServiceService {
     const sort = SORT_MAPPING[query.sort as SortOption] || SORT_MAPPING.newest;
 
     const [services, total] = await Promise.all([
-      this.serviceRepo.findMany(filter, { skip, limit, sort }),
-      this.serviceRepo.count(filter),
+      this._serviceRepo.findMany(filter, { skip, limit, sort }),
+      this._serviceRepo.count(filter),
     ]);
 
     const servicesWithSignedUrls = await Promise.all(
@@ -262,7 +262,7 @@ export class ServiceService implements IServiceService {
   }
 
   async findById(id: string): Promise<IService & { signedImages?: string[] }> {
-    const service = await this.serviceRepo.findById(id);
+    const service = await this._serviceRepo.findById(id);
     if (!service) throw new NotFoundError('Service not found');
 
     const signedImages = await getSignedImageUrls(service.images || [], 7200);
@@ -271,10 +271,10 @@ export class ServiceService implements IServiceService {
   }
 
   async delete(id: string): Promise<void> {
-    const service = await this.serviceRepo.findById(id);
+    const service = await this._serviceRepo.findById(id);
     if (!service) throw new NotFoundError('Service not found');
 
-    await this.serviceRepo.deleteById(id);
+    await this._serviceRepo.deleteById(id);
   }
 
   async getAvailability(
@@ -285,7 +285,7 @@ export class ServiceService implements IServiceService {
     availableDates: string[];
     bookedDates: string[];
   }> {
-    const service = await this.serviceRepo.findById(id);
+    const service = await this._serviceRepo.findById(id);
     if (!service) throw new NotFoundError('Service not found');
 
     const start = new Date(Date.UTC(year, month - 1, 1));

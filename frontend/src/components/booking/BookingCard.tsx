@@ -76,13 +76,6 @@ export default function BookingCard({ booking }: Props) {
         >
           View Service Details
         </Link>
-
-        {booking.status === "confirmed" &&
-          new Date(booking.startDate) > new Date() && (
-            <button className="text-red-600 hover:text-red-800 text-sm font-medium">
-              Cancel Booking
-            </button>
-          )}
       </div>
     </div>
   );

@@ -10,4 +10,8 @@ export const TYPES = {
   BookingController: Symbol.for('BookingController'),
   RazorpayPaymentService: Symbol.for('RazorpayPaymentService'),
   PaymentFactory: Symbol.for('PaymentFactory'),
+  AdminService: Symbol.for('AdminService'),
+  AdminController: Symbol.for('AdminController'),
+  UserService: Symbol.for('UserService'),
+  UserController: Symbol.for('UserController'),
 };

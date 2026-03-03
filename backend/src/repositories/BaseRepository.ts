@@ -45,7 +45,8 @@ export abstract class BaseRepository<T> implements IBaseRepository<T> {
       skip?: number;
       limit?: number;
       sort?: Record<string, 1 | -1 | string>;
-      populate?: string | string[];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      populate?: any;
       session?: ClientSession;
     } = {}
   ): Promise<T[]> {

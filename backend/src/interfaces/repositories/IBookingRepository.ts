@@ -16,7 +16,7 @@ export interface IBookingRepository extends IBaseRepository<IBooking> {
     end: Date
   ): Promise<boolean>;
   updateStatus(
-    id: string,
+    bookingId: string,
     status: string,
     session?: ClientSession
   ): Promise<IBooking | null>;
@@ -45,4 +45,8 @@ export interface IBookingRepository extends IBaseRepository<IBooking> {
     bookingId: string,
     session?: ClientSession
   ): Promise<boolean>;
+  getRevenueAndCount(): Promise<{
+    totalConfirmed: number;
+    totalRevenue: number;
+  }>;
 }

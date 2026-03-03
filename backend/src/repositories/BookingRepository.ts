@@ -61,12 +61,16 @@ export class BookingRepository
   }
 
   async updateStatus(
-    id: string,
+    bookingId: string,
     status: string,
     session?: ClientSession
   ): Promise<IBooking | null> {
     return this.model
-      .findByIdAndUpdate(id, { $set: { status } }, { new: true, session })
+      .findByIdAndUpdate(
+        bookingId,
+        { $set: { status } },
+        { new: true, session }
+      )
       .lean();
   }
 
@@ -149,5 +153,30 @@ export class BookingRepository
       { session }
     );
     return result.modifiedCount === 1;
+  }
+
+  async getRevenueAndCount(): Promise<{
+    totalConfirmed: number;
+    totalRevenue: number;
+  }> {
+    const result = await this.model.aggregate([
+      {
+        $match: { status: BookingStatus.CONFIRMED },
+      },
+      {
+        $group: {
+          _id: null,
+          totalConfirmed: { $sum: 1 },
+          totalRevenue: { $sum: '$totalAmount' },
+        },
+      },
+    ]);
+
+    return (
+      result[0] || {
+        totalConfirmed: 0,
+        totalRevenue: 0,
+      }
+    );
   }
 }

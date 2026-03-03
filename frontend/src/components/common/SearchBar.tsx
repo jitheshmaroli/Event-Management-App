@@ -1,4 +1,4 @@
-import { Search } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useDebounce } from "@/hooks/useDebounce";
 import { DEBOUNCE_DELAY } from "@/constants/service.constants";
@@ -23,6 +23,11 @@ export default function SearchBar({
     onSearch(debouncedSearch);
   }, [debouncedSearch, onSearch]);
 
+  const handleClear = () => {
+    setSearchTerm("");
+    onSearch("");
+  };
+
   return (
     <div className={`relative ${className}`}>
       <Search
@@ -38,10 +43,11 @@ export default function SearchBar({
       />
       {searchTerm && (
         <button
-          onClick={() => setSearchTerm("")}
+          onClick={handleClear}
           className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+          aria-label="Clear search"
         >
-          ×
+          <X size={18} />
         </button>
       )}
     </div>
