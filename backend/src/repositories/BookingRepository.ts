@@ -8,25 +8,25 @@ import {
 } from '@/models/Booking';
 import { IBookingRepository } from '@/interfaces/repositories/IBookingRepository';
 import { ClientSession } from 'mongoose';
+import { BaseRepository } from './BaseRepository';
 
 @injectable()
-export class BookingRepository implements IBookingRepository {
-  async create(
-    booking: Partial<IBooking>,
-    session?: ClientSession
-  ): Promise<IBooking> {
-    const doc = new Booking(booking);
-    return session ? doc.save({ session }) : doc.save();
-  }
-
-  async findById(id: string): Promise<IBooking | null> {
-    return Booking.findById(id).lean();
+export class BookingRepository
+  extends BaseRepository<IBooking>
+  implements IBookingRepository
+{
+  constructor() {
+    super(Booking);
   }
 
   async findByUser(userId: string, status?: string): Promise<IBooking[]> {
     const query: any = { user: userId };
     if (status) query.status = status;
-    return Booking.find(query).sort({ createdAt: -1 }).lean();
+    return this.model
+      .find(query)
+      .populate('service')
+      .sort({ createdAt: -1 })
+      .lean();
   }
 
   async findOverlapping(
@@ -41,7 +41,7 @@ export class BookingRepository implements IBookingRepository {
       $or: [{ startDate: { $lte: end }, endDate: { $gte: start } }],
     };
     if (excludeId) query._id = { $ne: excludeId };
-    return Booking.findOne(query).lean();
+    return this.model.findOne(query).lean();
   }
 
   async hasOverlappingBookingOrReservation(
@@ -49,25 +49,29 @@ export class BookingRepository implements IBookingRepository {
     start: Date,
     end: Date
   ): Promise<boolean> {
-    const conflict = await Booking.findOne({
-      service: serviceId,
-      status: { $in: [BookingStatus.RESERVED, BookingStatus.CONFIRMED] },
-      $or: [{ startDate: { $lte: end }, endDate: { $gte: start } }],
-    }).lean();
+    const conflict = await this.model
+      .findOne({
+        service: serviceId,
+        status: { $in: [BookingStatus.RESERVED, BookingStatus.CONFIRMED] },
+        $or: [{ startDate: { $lte: end }, endDate: { $gte: start } }],
+      })
+      .lean();
 
     return !!conflict;
   }
 
   async updateStatus(
-    id: string,
+    bookingId: string,
     status: string,
     session?: ClientSession
   ): Promise<IBooking | null> {
-    return Booking.findByIdAndUpdate(
-      id,
-      { $set: { status } },
-      { new: true, session }
-    ).lean();
+    return this.model
+      .findByIdAndUpdate(
+        bookingId,
+        { $set: { status } },
+        { new: true, session }
+      )
+      .lean();
   }
 
   async updatePaymentStatus(
@@ -75,18 +79,21 @@ export class BookingRepository implements IBookingRepository {
     data: Partial<IBooking['payment']>,
     session?: ClientSession
   ): Promise<IBooking | null> {
-    return Booking.findOneAndUpdate(
-      { 'payment.referenceId': referenceId },
-      { $set: { payment: data } },
-      { new: true, session }
-    ).lean();
+    return this.model
+      .findOneAndUpdate(
+        { 'payment.referenceId': referenceId },
+        { $set: { payment: data } },
+        { new: true, session }
+      )
+      .lean();
   }
 
   async findByPaymentReferenceId(
     orderId: string,
     session?: ClientSession
   ): Promise<IBooking | null> {
-    return Booking.findOne({ 'payment.referenceId': orderId })
+    return this.model
+      .findOne({ 'payment.referenceId': orderId })
       .session(session ?? null)
       .lean();
   }
@@ -99,39 +106,43 @@ export class BookingRepository implements IBookingRepository {
     },
     session?: ClientSession
   ): Promise<IBooking | null> {
-    return Booking.findByIdAndUpdate(
-      bookingId,
-      {
-        $set: {
-          status: BookingStatus.CONFIRMED,
-          'payment.status': paymentData.status,
-          'payment.referenceId': paymentData.referenceId,
+    return this.model
+      .findByIdAndUpdate(
+        bookingId,
+        {
+          $set: {
+            status: BookingStatus.CONFIRMED,
+            'payment.status': paymentData.status,
+            'payment.referenceId': paymentData.referenceId,
+          },
+          $unset: {
+            reservedUntil: '',
+            expiresAt: '',
+          },
         },
-        $unset: {
-          reservedUntil: '',
-          expiresAt: '',
-        },
-      },
-      { new: true, session }
-    ).lean();
+        { new: true, session }
+      )
+      .lean();
   }
 
   async markAsFailedById(
     bookingId: string,
     session?: ClientSession
   ): Promise<IBooking | null> {
-    return Booking.findByIdAndUpdate(
-      bookingId,
-      { $set: { status: BookingStatus.FAILED } },
-      { new: true, session }
-    ).lean();
+    return this.model
+      .findByIdAndUpdate(
+        bookingId,
+        { $set: { status: BookingStatus.FAILED } },
+        { new: true, session }
+      )
+      .lean();
   }
 
   async unsetReservationFields(
     bookingId: string,
     session?: ClientSession
   ): Promise<boolean> {
-    const result = await Booking.updateOne(
+    const result = await this.model.updateOne(
       { _id: bookingId },
       {
         $unset: {
@@ -142,5 +153,30 @@ export class BookingRepository implements IBookingRepository {
       { session }
     );
     return result.modifiedCount === 1;
+  }
+
+  async getRevenueAndCount(): Promise<{
+    totalConfirmed: number;
+    totalRevenue: number;
+  }> {
+    const result = await this.model.aggregate([
+      {
+        $match: { status: BookingStatus.CONFIRMED },
+      },
+      {
+        $group: {
+          _id: null,
+          totalConfirmed: { $sum: 1 },
+          totalRevenue: { $sum: '$totalAmount' },
+        },
+      },
+    ]);
+
+    return (
+      result[0] || {
+        totalConfirmed: 0,
+        totalRevenue: 0,
+      }
+    );
   }
 }

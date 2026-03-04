@@ -9,6 +9,7 @@ export interface User {
   phone?: string;
   role: Role;
   isVerified: boolean;
+  createdAt?: string;
 }
 
 export interface ApiResponse<T = any> {

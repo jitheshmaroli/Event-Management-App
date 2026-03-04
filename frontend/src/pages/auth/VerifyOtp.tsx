@@ -131,9 +131,9 @@ export default function VerifyOtp() {
         setSuccess(true);
 
         if (otpPurpose === OTP_PURPOSE.SIGNUP) {
-          setSuccessMessage("Email verified! Redirecting to dashboard...");
+          setSuccessMessage("Email verified! Redirecting to bookings...");
 
-          setTimeout(() => navigate("/dashboard", { replace: true }), 1500);
+          setTimeout(() => navigate("/my-bookings", { replace: true }), 1500);
         } else if (otpPurpose === OTP_PURPOSE.FORGOT_PASSWORD) {
           const message =
             payload.purpose === OTP_PURPOSE.FORGOT_PASSWORD
@@ -230,7 +230,7 @@ export default function VerifyOtp() {
                 )}
                 <p className="text-gray-600 mt-4">
                   {otpPurpose === OTP_PURPOSE.SIGNUP
-                    ? "Redirecting to dashboard..."
+                    ? "Redirecting to bookings..."
                     : "Redirecting to reset password..."}
                 </p>
               </div>

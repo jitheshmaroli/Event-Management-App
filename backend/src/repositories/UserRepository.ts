@@ -1,25 +1,19 @@
 import { injectable } from 'inversify';
 import { User, IUser } from '../models/User';
 import { IUserRepository } from '../interfaces/repositories/IUserRepository';
+import { BaseRepository } from './BaseRepository';
 
 @injectable()
-export class UserRepository implements IUserRepository {
+export class UserRepository
+  extends BaseRepository<IUser>
+  implements IUserRepository
+{
+  constructor() {
+    super(User);
+  }
   async findByEmail(email: string): Promise<IUser | null> {
-    return User.findOne({ email }).select(
-      '+password +refreshToken +otp +otpCreatedAt +otpPurpose'
-    );
-  }
-
-  async findById(id: string): Promise<IUser | null> {
-    return User.findById(id).select('+refreshToken');
-  }
-
-  async create(userData: Partial<IUser>): Promise<IUser> {
-    const user = new User(userData);
-    return user.save();
-  }
-
-  async updateById(id: string, update: Partial<IUser>): Promise<IUser | null> {
-    return User.findByIdAndUpdate(id, update, { new: true });
+    return this.model
+      .findOne({ email })
+      .select('+password +refreshToken +otp +otpCreatedAt +otpPurpose');
   }
 }

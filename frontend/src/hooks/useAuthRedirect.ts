@@ -16,7 +16,7 @@ export const useAuthRedirect = () => {
       if (user.role === ROLES.ADMIN) {
         navigate("/admin/dashboard", { replace: true });
       } else {
-        navigate("/dashboard", { replace: true });
+        navigate("/my-bookings", { replace: true });
       }
     }
   }, [isAuthenticated, user, isLoading, navigate]);

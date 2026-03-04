@@ -11,9 +11,9 @@ export default function BookingSuccess() {
           Your booking has been successfully confirmed. You will receive a
           confirmation email shortly.
         </p>
-        <Link to="/dashboard">
+        <Link to="/my-bookings">
           <button className="bg-indigo-600 text-white px-8 py-3 rounded-lg font-medium hover:bg-indigo-700">
-            Go to Dashboard
+            Go to bookings
           </button>
         </Link>
       </div>

@@ -4,7 +4,6 @@ import Home from "@/pages/Home";
 import Login from "@/pages/auth/Login";
 import Register from "@/pages/auth/Register";
 import VerifyEmail from "@/pages/auth/VerifyOtp";
-import Dashboard from "@/pages/Dashboard";
 import AdminDashboard from "@/pages/Admin/Dashboard";
 import ServiceList from "@/pages/services/ServiceList";
 import ServiceDetail from "@/pages/services/ServiceDetail";
@@ -24,6 +23,10 @@ import BookingSummary from "@/pages/bookings/BookingSummary";
 import PaymentPage from "@/pages/bookings/PaymentPage";
 import BookingSuccess from "@/pages/bookings/BookingSuccess";
 import BookingFailed from "@/pages/bookings/BookingFailed";
+import MyBookings from "@/pages/bookings/MyBookings";
+import AdminUsers from "@/pages/Admin/Users";
+import AdminBookings from "@/pages/Admin/Bookings";
+import Profile from "@/pages/user/Profile";
 
 export default function AppRoutes() {
   return (
@@ -47,7 +50,8 @@ export default function AppRoutes() {
           <Route path="/bookings/payment" element={<PaymentPage />} />
           <Route path="/bookings/success" element={<BookingSuccess />} />
           <Route path="/bookings/failed" element={<BookingFailed />} />
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/my-bookings" element={<MyBookings />} />
+          <Route path="/profile" element={<Profile />} />
         </Route>
 
         <Route element={<RoleProtectedRoute allowedRoles={[ROLES.ADMIN]} />}>
@@ -56,6 +60,8 @@ export default function AppRoutes() {
           <Route path="/admin/services/new" element={<ServiceCreate />} />
           <Route path="/admin/services/:id" element={<ServiceView />} />
           <Route path="/admin/services/:id/edit" element={<ServiceEdit />} />
+          <Route path="/admin/users" element={<AdminUsers />} />
+          <Route path="/admin/bookings" element={<AdminBookings />} />
         </Route>
       </Route>
 

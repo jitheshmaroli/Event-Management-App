@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Lock, ArrowLeft, Home } from "lucide-react";
+import { Lock, ArrowLeft } from "lucide-react";
 import { useAppSelector } from "@/hooks/useAppSelector";
 
 export default function Unauthorized() {
@@ -29,14 +29,6 @@ export default function Unauthorized() {
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           {isAuthenticated ? (
             <>
-              <Link
-                to="/dashboard"
-                className="inline-flex items-center px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition transform hover:scale-105 shadow-lg"
-              >
-                <Home className="mr-2 h-5 w-5" />
-                Go to Dashboard
-              </Link>
-
               <Link
                 to="/"
                 className="inline-flex items-center px-8 py-4 bg-white/10 backdrop-blur-md border border-white/20 text-white font-medium rounded-xl hover:bg-white/20 transition"

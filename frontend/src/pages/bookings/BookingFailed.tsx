@@ -10,9 +10,9 @@ export default function BookingFailed() {
         <p className="text-gray-600 mb-8">
           Your payment could not be processed. Please try again.
         </p>
-        <Link to="/">
+        <Link to="/services">
           <button className="bg-indigo-600 text-white px-8 py-3 rounded-lg font-medium hover:bg-indigo-700">
-            Back to Home
+            Back to Services
           </button>
         </Link>
       </div>

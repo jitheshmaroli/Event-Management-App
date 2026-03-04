@@ -1,12 +1,8 @@
 import { ClientSession } from 'mongoose';
 import { IBooking, PaymentStatus } from '@/models/Booking';
+import { IBaseRepository } from './IBaseRepository';
 
-export interface IBookingRepository {
-  create(
-    booking: Partial<IBooking>,
-    session?: ClientSession
-  ): Promise<IBooking>;
-  findById(id: string): Promise<IBooking | null>;
+export interface IBookingRepository extends IBaseRepository<IBooking> {
   findByUser(userId: string, status?: string): Promise<IBooking[]>;
   findOverlapping(
     serviceId: string,
@@ -20,7 +16,7 @@ export interface IBookingRepository {
     end: Date
   ): Promise<boolean>;
   updateStatus(
-    id: string,
+    bookingId: string,
     status: string,
     session?: ClientSession
   ): Promise<IBooking | null>;
@@ -49,4 +45,8 @@ export interface IBookingRepository {
     bookingId: string,
     session?: ClientSession
   ): Promise<boolean>;
+  getRevenueAndCount(): Promise<{
+    totalConfirmed: number;
+    totalRevenue: number;
+  }>;
 }
