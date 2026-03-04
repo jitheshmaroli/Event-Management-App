@@ -7,6 +7,7 @@ import api from "@/lib/api";
 import { DataTable } from "@/components/common/DataTable";
 import Pagination from "@/components/common/Pagination";
 import SearchBar from "@/components/common/SearchBar";
+import { useServiceQuery } from "@/hooks/useServiceQuery";
 
 interface User {
   _id: string;
@@ -46,8 +47,7 @@ export default function AdminUsers() {
   >(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [page, setPage] = useState(1);
+  const { queryState, setSearch, setPage } = useServiceQuery();
 
   useEffect(() => {
     if (!isAuthenticated && !authLoading) navigate("/login", { replace: true });
@@ -63,10 +63,13 @@ export default function AdminUsers() {
         setLoading(true);
         setError(null);
 
-        const params: Record<string, any> = { page, limit: 10 };
-        if (searchTerm.trim()) params.search = searchTerm.trim();
-
-        const res = await api.get<ApiResponse>("/admin/users", { params });
+        const res = await api.get<ApiResponse>("/admin/users", {
+          params: {
+            search: queryState.search,
+            page: queryState.page,
+            limit: queryState.limit,
+          },
+        });
         const responseData = res.data.data;
 
         setUsers(responseData.data);
@@ -79,7 +82,8 @@ export default function AdminUsers() {
     };
 
     fetchUsers();
-  }, [page, searchTerm, isAuthenticated, user?.role]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, queryState.search, queryState.page, user?.role]);
 
   const columns = [
     {
@@ -171,7 +175,8 @@ export default function AdminUsers() {
           </div>
 
           <SearchBar
-            onSearch={setSearchTerm}
+            onSearch={setSearch}
+            initialValue={queryState.search}
             placeholder="Search by name or email..."
             className="w-full sm:w-80"
           />
@@ -183,8 +188,8 @@ export default function AdminUsers() {
             data={users}
             isLoading={loading}
             emptyMessage={
-              searchTerm
-                ? `No users matching "${searchTerm}"`
+              queryState.search
+                ? `No users matching "${queryState.search}"`
                 : "No users found"
             }
           />
@@ -192,7 +197,7 @@ export default function AdminUsers() {
           {pagination && pagination.pages > 1 && (
             <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
               <Pagination
-                currentPage={page}
+                currentPage={queryState.page}
                 totalPages={pagination.pages}
                 totalItems={pagination.total}
                 onPageChange={setPage}

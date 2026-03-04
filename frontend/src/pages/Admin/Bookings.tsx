@@ -6,7 +6,6 @@ import { useAppSelector } from "@/hooks/useAppSelector";
 import api from "@/lib/api";
 import { DataTable } from "@/components/common/DataTable";
 import Pagination from "@/components/common/Pagination";
-import SearchBar from "@/components/common/SearchBar";
 import { rupeeFormatter } from "@/utils/format";
 import type { ApiResponse, Booking } from "@/types/booking.types";
 
@@ -25,7 +24,6 @@ export default function AdminBookings() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(1);
 
   useEffect(() => {
@@ -44,7 +42,6 @@ export default function AdminBookings() {
 
         const params: Record<string, any> = { page, limit: 10 };
         if (statusFilter) params.status = statusFilter;
-        if (searchTerm.trim()) params.search = searchTerm.trim();
 
         const res = await api.get<ApiResponse>("/admin/bookings", { params });
         const responseData = res.data.data;
@@ -59,7 +56,7 @@ export default function AdminBookings() {
     };
 
     fetchBookings();
-  }, [page, statusFilter, searchTerm, isAuthenticated, user?.role]);
+  }, [page, statusFilter, isAuthenticated, user?.role]);
 
   const columns = [
     {
@@ -163,12 +160,6 @@ export default function AdminBookings() {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4">
-            <SearchBar
-              onSearch={setSearchTerm}
-              placeholder="Search by customer or service..."
-              className="w-full sm:w-80"
-            />
-
             <select
               value={statusFilter}
               onChange={(e) => {
@@ -193,9 +184,7 @@ export default function AdminBookings() {
             data={bookings}
             isLoading={loading}
             emptyMessage={
-              statusFilter || searchTerm
-                ? "No matching bookings found"
-                : "No bookings found"
+              statusFilter ? "No matching bookings found" : "No bookings found"
             }
           />
 
