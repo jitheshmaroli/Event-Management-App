@@ -11,6 +11,7 @@ import { BOOKING_MAX_DAYS } from "@/constants/booking.constants";
 import { useAppDispatch } from "@/hooks/useAppDispatch";
 import { useAppSelector } from "@/hooks/useAppSelector";
 import { toDateKey } from "@/utils/date";
+import { resetServices } from "@/features/services/servicesSlice";
 
 export default function BookingPage() {
   const { serviceId } = useParams<{ serviceId: string }>();
@@ -25,6 +26,7 @@ export default function BookingPage() {
 
   useEffect(() => {
     if (serviceId) {
+      dispatch(resetServices());
       dispatch(fetchServiceById(serviceId));
     }
   }, [serviceId, dispatch]);
@@ -54,7 +56,7 @@ export default function BookingPage() {
       ).unwrap();
 
       navigate("/bookings/summary", { state: { bookingData: result } });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       showError(err.message || "Failed to create booking");
     } finally {
