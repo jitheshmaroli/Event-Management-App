@@ -4,11 +4,10 @@ import { AuthController } from '@/controllers/AuthController';
 import { TYPES } from '@/inversify/types';
 import { validateRequest } from '@/middlewares/validateRequest';
 import {
-  forgotPasswordSchema,
   loginSchema,
   registerSchema,
-  resendOtpSchema,
   resetPasswordSchema,
+  sendOtpSchema,
   verifyOtpSchema,
 } from '@/validations/auth.validation';
 import { authenticate } from '@/middlewares/auth.middleware';
@@ -22,9 +21,9 @@ router.post(
   authController.register.bind(authController)
 );
 router.post(
-  '/resend-otp',
-  validateRequest(resendOtpSchema, 'body'),
-  authController.resendOtp.bind(authController)
+  '/send-otp',
+  validateRequest(sendOtpSchema, 'body'),
+  authController.sendOtp.bind(authController)
 );
 router.post(
   '/verify-otp',
@@ -37,11 +36,6 @@ router.post(
   authController.login.bind(authController)
 );
 router.post(
-  '/forgot-password',
-  validateRequest(forgotPasswordSchema, 'body'),
-  authController.forgotPassword.bind(authController)
-);
-router.post(
   '/reset-password',
   validateRequest(resetPasswordSchema, 'body'),
   authController.resetPassword.bind(authController)
@@ -51,5 +45,10 @@ router.post(
   '/logout',
   authenticate,
   authController.logout.bind(authController)
+);
+router.get(
+  '/me',
+  authenticate,
+  authController.getCurrentUser.bind(authController)
 );
 export default router;
