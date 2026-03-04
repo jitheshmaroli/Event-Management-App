@@ -1,3 +1,4 @@
+import 'module-alias/register';
 import { config } from 'dotenv';
 import express from 'express';
 import authRoutes from '@/routes/auth.routes';
