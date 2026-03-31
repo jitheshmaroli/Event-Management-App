@@ -27,47 +27,60 @@ import MyBookings from "@/pages/bookings/MyBookings";
 import AdminUsers from "@/pages/Admin/Users";
 import AdminBookings from "@/pages/Admin/Bookings";
 import Profile from "@/pages/user/Profile";
+import { ROUTES } from "@/constants/routes";
 
 export default function AppRoutes() {
   return (
     <Routes>
       {/* Public pages – no layout */}
-      <Route path="/login" element={<Login />} />
-      <Route path="/admin/login" element={<AdminLogin />} />
-      <Route path="/register" element={<Register />} />
-      <Route path="/verify-otp" element={<VerifyEmail />} />
-      <Route path="/forgot-password" element={<ForgotPassword />} />
-      <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path={ROUTES.LOGIN} element={<Login />} />
+      <Route path={ROUTES.ADMIN_LOGIN} element={<AdminLogin />} />
+      <Route path={ROUTES.REGISTER} element={<Register />} />
+      <Route path={ROUTES.VERIFY_OTP} element={<VerifyEmail />} />
+      <Route path={ROUTES.FORGOT_PASSWORD} element={<ForgotPassword />} />
+      <Route path={ROUTES.RESET_PASSWORD} element={<ResetPassword />} />
 
       {/* Protected pages with layout */}
       <Route element={<MainLayout />}>
-        <Route path="/" element={<Home />} />
-        <Route path="/services" element={<ServiceList />} />
-        <Route path="/services/:id" element={<ServiceDetail />} />
+        <Route path={ROUTES.HOME} element={<Home />} />
+        <Route path={ROUTES.SERVICES} element={<ServiceList />} />
+        <Route path={ROUTES.SERVICE_DETAIL} element={<ServiceDetail />} />
         <Route element={<RoleProtectedRoute allowedRoles={[ROLES.USER]} />}>
-          <Route path="/bookings/new/:serviceId" element={<BookingPage />} />
-          <Route path="/bookings/summary" element={<BookingSummary />} />
-          <Route path="/bookings/payment" element={<PaymentPage />} />
-          <Route path="/bookings/success" element={<BookingSuccess />} />
-          <Route path="/bookings/failed" element={<BookingFailed />} />
-          <Route path="/my-bookings" element={<MyBookings />} />
-          <Route path="/profile" element={<Profile />} />
+          <Route path={ROUTES.USER.BOOKING_NEW} element={<BookingPage />} />
+          <Route
+            path={ROUTES.USER.BOOKING_SUMMARY}
+            element={<BookingSummary />}
+          />
+          <Route path={ROUTES.USER.BOOKING_PAYMENT} element={<PaymentPage />} />
+          <Route
+            path={ROUTES.USER.BOOKING_SUCCESS}
+            element={<BookingSuccess />}
+          />
+          <Route
+            path={ROUTES.USER.BOOKING_FAILED}
+            element={<BookingFailed />}
+          />
+          <Route path={ROUTES.USER.MY_BOOKINGS} element={<MyBookings />} />
+          <Route path={ROUTES.USER.PROFILE} element={<Profile />} />
         </Route>
 
         <Route element={<RoleProtectedRoute allowedRoles={[ROLES.ADMIN]} />}>
-          <Route path="/admin/dashboard" element={<AdminDashboard />} />
-          <Route path="/admin/services" element={<ServicesList />} />
-          <Route path="/admin/services/new" element={<ServiceCreate />} />
-          <Route path="/admin/services/:id" element={<ServiceView />} />
-          <Route path="/admin/services/:id/edit" element={<ServiceEdit />} />
-          <Route path="/admin/users" element={<AdminUsers />} />
-          <Route path="/admin/bookings" element={<AdminBookings />} />
+          <Route path={ROUTES.ADMIN.DASHBOARD} element={<AdminDashboard />} />
+          <Route path={ROUTES.ADMIN.SERVICES} element={<ServicesList />} />
+          <Route
+            path={ROUTES.ADMIN.SERVICE_CREATE}
+            element={<ServiceCreate />}
+          />
+          <Route path={ROUTES.ADMIN.SERVICE_VIEW} element={<ServiceView />} />
+          <Route path={ROUTES.ADMIN.SERVICE_EDIT} element={<ServiceEdit />} />
+          <Route path={ROUTES.ADMIN.USERS} element={<AdminUsers />} />
+          <Route path={ROUTES.ADMIN.BOOKINGS} element={<AdminBookings />} />
         </Route>
       </Route>
 
       {/* error routes */}
-      <Route path="/404" element={<NotFound />} />
-      <Route path="/unauthorized" element={<Unauthorized />} />
+      <Route path={ROUTES.NOT_FOUND} element={<NotFound />} />
+      <Route path={ROUTES.UNAUTHORIZED} element={<Unauthorized />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

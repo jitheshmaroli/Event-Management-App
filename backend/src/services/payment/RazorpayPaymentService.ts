@@ -11,10 +11,10 @@ import { BadRequestError } from '@/utils/errors';
 
 @injectable()
 export class RazorpayPaymentService implements IPaymentService {
-  private razorpay: Razorpay;
+  private _razorpay: Razorpay;
 
   constructor() {
-    this.razorpay = new Razorpay({
+    this._razorpay = new Razorpay({
       key_id: process.env.RAZORPAY_KEY_ID!,
       key_secret: process.env.RAZORPAY_KEY_SECRET!,
     });
@@ -30,7 +30,7 @@ export class RazorpayPaymentService implements IPaymentService {
       receipt,
     };
 
-    const order = await this.razorpay.orders.create(options);
+    const order = await this._razorpay.orders.create(options);
     return {
       id: order.id,
       amount: Number(order.amount) / 100,
@@ -52,7 +52,7 @@ export class RazorpayPaymentService implements IPaymentService {
 
   async refundPayment(paymentId: string, amount?: number): Promise<any> {
     try {
-      const refund = await this.razorpay.payments.refund(paymentId, {
+      const refund = await this._razorpay.payments.refund(paymentId, {
         amount: amount ? amount * 100 : undefined,
       });
       return refund;

@@ -9,7 +9,7 @@ import { HTTP_STATUS } from '@/constants/httpStatusCode';
 @injectable()
 export class BookingController {
   constructor(
-    @inject(TYPES.BookingService) private bookingService: IBookingService
+    @inject(TYPES.BookingService) private _bookingService: IBookingService
   ) {}
 
   async createBooking(
@@ -19,7 +19,7 @@ export class BookingController {
   ) {
     try {
       const { serviceId, startDate, endDate } = req.body;
-      const result = await this.bookingService.createBooking({
+      const result = await this._bookingService.createBooking({
         serviceId,
         startDate,
         endDate,
@@ -42,7 +42,7 @@ export class BookingController {
       const { razorpay_order_id, razorpay_payment_id, razorpay_signature } =
         req.body;
 
-      const booking = await this.bookingService.verifyAndConfirmPayment(
+      const booking = await this._bookingService.verifyAndConfirmPayment(
         razorpay_order_id,
         {
           razorpay_order_id,
@@ -66,7 +66,7 @@ export class BookingController {
   ) {
     try {
       const id = req.params.id as string;
-      const booking = await this.bookingService.cancelBooking(
+      const booking = await this._bookingService.cancelBooking(
         id,
         req.user!.userId
       );
@@ -86,7 +86,7 @@ export class BookingController {
     try {
       const id = req.params.id as string;
 
-      const updated = await this.bookingService.markAsFailed(id);
+      const updated = await this._bookingService.markAsFailed(id);
 
       return successResponse(res, 'Booking marked as failed', {
         booking: updated,
@@ -102,7 +102,7 @@ export class BookingController {
     next: NextFunction
   ) {
     try {
-      const bookings = await this.bookingService.getUserBookings(
+      const bookings = await this._bookingService.getUserBookings(
         req.user!.userId
       );
       return successResponse(res, 'Bookings fetched', bookings);

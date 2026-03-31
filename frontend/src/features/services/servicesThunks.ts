@@ -45,7 +45,18 @@ export const createService = createAsyncThunk(
       formData.append("pricePerDay", data.pricePerDay.toString());
       formData.append("location", data.location);
       formData.append("phone", data.phone);
-      formData.append("availability", JSON.stringify(data.availability));
+
+      if (data.availability) {
+        formData.append("availability", JSON.stringify(data.availability));
+      } else {
+        formData.append(
+          "availability",
+          JSON.stringify({
+            availableRanges: [],
+            bookedRanges: [],
+          }),
+        );
+      }
 
       if (data.images && data.images.length > 0) {
         data.images.forEach((file) => {

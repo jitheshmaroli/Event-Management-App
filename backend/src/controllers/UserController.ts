@@ -9,7 +9,7 @@ import { UpdateProfileInput } from '@/dtos/user/user.dto';
 
 @injectable()
 export class UserController {
-  constructor(@inject(TYPES.UserService) private userService: IUserService) {}
+  constructor(@inject(TYPES.UserService) private _userService: IUserService) {}
 
   async updateProfile(
     req: AuthenticatedRequest,
@@ -20,7 +20,7 @@ export class UserController {
       const userId = req.user!.userId;
       const data = req.body as UpdateProfileInput;
 
-      const updated = await this.userService.updateProfile(userId, data);
+      const updated = await this._userService.updateProfile(userId, data);
 
       return successResponse(
         res,

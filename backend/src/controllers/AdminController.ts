@@ -8,7 +8,7 @@ import { AuthenticatedRequest } from '@/middlewares/auth.middleware';
 @injectable()
 export class AdminController {
   constructor(
-    @inject(TYPES.AdminService) private adminService: IAdminService
+    @inject(TYPES.AdminService) private _adminService: IAdminService
   ) {}
 
   async getDashboard(
@@ -17,7 +17,7 @@ export class AdminController {
     next: NextFunction
   ) {
     try {
-      const data = await this.adminService.getDashboardData();
+      const data = await this._adminService.getDashboardData();
       return successResponse(res, 'Dashboard data fetched', data);
     } catch (err) {
       next(err);
@@ -30,7 +30,7 @@ export class AdminController {
       const limit = Number(req.query.limit) || 10;
       const search = req.query.search as string | undefined;
 
-      const result = await this.adminService.getUsers(page, limit, search);
+      const result = await this._adminService.getUsers(page, limit, search);
 
       return successResponse(res, 'Users fetched', result);
     } catch (err) {
@@ -44,7 +44,7 @@ export class AdminController {
       const limit = Number(req.query.limit) || 10;
       const status = req.query.status as string | undefined;
 
-      const result = await this.adminService.getBookings(page, limit, status);
+      const result = await this._adminService.getBookings(page, limit, status);
 
       return successResponse(res, 'Bookings fetched', result);
     } catch (err) {

@@ -10,7 +10,7 @@ import { getSignedImageUrls } from '@/utils/s3Utils';
 @injectable()
 export class ServiceController {
   constructor(
-    @inject(TYPES.ServiceService) private serviceService: IServiceService
+    @inject(TYPES.ServiceService) private _serviceService: IServiceService
   ) {}
 
   async createService(
@@ -23,7 +23,7 @@ export class ServiceController {
       const files = req.files as Express.Multer.File[] | undefined;
       const imageKeys = files?.map((file) => file.key!).filter(Boolean) ?? [];
 
-      const service = await this.serviceService.create({
+      const service = await this._serviceService.create({
         ...data,
         images: imageKeys || [],
       });
@@ -68,7 +68,7 @@ export class ServiceController {
         updatePayload.removedImages = removedImages;
       }
 
-      const updated = await this.serviceService.update(
+      const updated = await this._serviceService.update(
         serviceId,
         updatePayload
       );
@@ -87,7 +87,7 @@ export class ServiceController {
   async getAllServices(req: Request, res: Response, next: NextFunction) {
     try {
       const query = req.query;
-      const result = await this.serviceService.findMany(query);
+      const result = await this._serviceService.findMany(query);
       return successResponse(res, 'Services fetched', result);
     } catch (err) {
       next(err);
@@ -98,7 +98,7 @@ export class ServiceController {
     try {
       const { serviceId } = req.params;
 
-      const service = await this.serviceService.findById(serviceId.toString());
+      const service = await this._serviceService.findById(serviceId.toString());
       return successResponse(res, 'Service fetched', service);
     } catch (err) {
       next(err);
@@ -113,7 +113,7 @@ export class ServiceController {
     try {
       const serviceId = req.params.serviceId as string;
       const userId = req.user?.userId;
-      await this.serviceService.delete(serviceId, userId!);
+      await this._serviceService.delete(serviceId, userId!);
       return successResponse(res, 'Service deleted');
     } catch (err) {
       next(err);
@@ -125,7 +125,7 @@ export class ServiceController {
       const serviceId = req.params.serviceId as string;
       const { year, month } = req.query as { year: string; month: string };
 
-      const result = await this.serviceService.getAvailability(
+      const result = await this._serviceService.getAvailability(
         serviceId,
         parseInt(year, 10),
         parseInt(month, 10)
