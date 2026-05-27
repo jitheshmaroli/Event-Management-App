@@ -9,7 +9,6 @@ import { IServiceService } from '@/interfaces/services/IServiceService';
 import { TYPES } from '@/inversify/types';
 import { IService } from '@/models/Service';
 import { BadRequestError, NotFoundError } from '@/utils/errors';
-import { deleteS3Objects, getSignedImageUrls } from '@/utils/s3Utils';
 import { inject, injectable } from 'inversify';
 import { QueryFilter } from 'mongoose';
 import { isWithinInterval } from 'date-fns';
@@ -26,6 +25,10 @@ import {
   SORT_MAPPING,
   SortOption,
 } from '@/constants/service.constants';
+import {
+  deleteCloudinaryObjects,
+  getSignedImageUrls,
+} from '@/utils/cloudinaryUtils';
 
 @injectable()
 export class ServiceService implements IServiceService {
@@ -82,10 +85,10 @@ export class ServiceService implements IServiceService {
         (key) => !data.removedImages!.includes(key)
       );
 
-      const deletedCount = await deleteS3Objects(data.removedImages);
+      const deletedCount = await deleteCloudinaryObjects(data.removedImages);
       if (deletedCount !== data.removedImages.length) {
         logger.warn(
-          `Only ${deletedCount}/${data.removedImages.length} images deleted from S3`
+          `Only ${deletedCount}/${data.removedImages.length} images deleted from cloudinary`
         );
       }
     }
@@ -126,15 +129,10 @@ export class ServiceService implements IServiceService {
       this._serviceRepo.count(filter),
     ]);
 
-    const servicesWithSignedUrls = await Promise.all(
-      services.map(async (service) => {
-        const signedImages = await getSignedImageUrls(
-          service.images || [],
-          7200
-        );
-        return { ...service, signedImages };
-      })
-    );
+    const servicesWithSignedUrls = services.map((service) => ({
+      ...service,
+      signedImages: getSignedImageUrls(service.images || [], 7200),
+    }));
 
     return {
       services: servicesWithSignedUrls,
