@@ -5,7 +5,8 @@ import { successResponse } from '@/utils/response';
 import { HTTP_STATUS } from '@/constants/httpStatusCode';
 import { AuthenticatedRequest } from '@/middlewares/auth.middleware';
 import { IServiceService } from '@/interfaces/services/IServiceService';
-import { getSignedImageUrls } from '@/utils/s3Utils';
+import { getSignedImageUrls } from '@/utils/cloudinaryUtils';
+import { CloudinaryFile } from '@/types/multer-cloudinary';
 
 @injectable()
 export class ServiceController {
@@ -20,8 +21,10 @@ export class ServiceController {
   ) {
     try {
       const data = req.body;
-      const files = req.files as Express.Multer.File[] | undefined;
-      const imageKeys = files?.map((file) => file.key!).filter(Boolean) ?? [];
+
+      const files = req.files as CloudinaryFile[] | undefined;
+      const imageKeys =
+        files?.map((f) => f.cloudinaryPublicId!).filter(Boolean) ?? [];
 
       const service = await this._serviceService.create({
         ...data,
@@ -49,9 +52,10 @@ export class ServiceController {
     try {
       const serviceId = req.params.serviceId as string;
       const data = req.body;
-      const files = req.files as Express.Multer.File[] | undefined;
 
-      const newImageKeys = files?.map((f) => f.key).filter(Boolean) ?? [];
+      const files = req.files as CloudinaryFile[] | undefined;
+      const newImageKeys =
+        files?.map((f) => f.cloudinaryPublicId).filter(Boolean) ?? [];
 
       const removedImages = req.body.removedImages
         ? Array.isArray(req.body.removedImages)

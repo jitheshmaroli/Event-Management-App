@@ -33,7 +33,14 @@ export default function ServiceEdit() {
     }
   }, [id, hasAttemptedFetch, loading, currentService, navigate]);
 
-  if (loading || !currentService) {
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-lg text-gray-600">Loading service...</p>
+      </div>
+    );
+  }
+  if (!currentService) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center text-center px-4 bg-gray-50">
         <div className="text-red-500 text-7xl mb-6">⚠️</div>

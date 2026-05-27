@@ -5,7 +5,7 @@ import { ServiceController } from '@/controllers/ServiceController';
 import { authenticate, restrictTo } from '@/middlewares/auth.middleware';
 import { validateRequest } from '@/middlewares/validateRequest';
 import { ROLES } from '@/constants/roles';
-import { uploadServiceImages } from '@/middlewares/multers3';
+import { uploadServiceImages } from '@/middlewares/multerCloudinary';
 import {
   createServiceSchema,
   serviceIdSchema,
