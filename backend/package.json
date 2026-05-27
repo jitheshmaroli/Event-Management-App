@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "ts-node-dev -r tsconfig-paths/register src/server.ts",
-    "build": "rimraf dist && tsc",
+    "build": "rm -rf dist && tsc",
     "start": "node -r module-alias/register dist/server.js",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\"",
     "lint:fix": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
