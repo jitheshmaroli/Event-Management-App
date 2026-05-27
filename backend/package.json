@@ -12,7 +12,7 @@
     "format": "prettier --write \"{src,apps,libs,test}/**/*.ts\""
   },
   "_moduleAliases": {
-    "@": "src"
+    "@": "dist"
   },
   "keywords": [],
   "author": "",
