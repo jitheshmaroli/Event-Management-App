@@ -19,6 +19,7 @@ import { rupeeFormatter } from "@/utils/format";
 import StatCard from "@/components/admin/StatCard";
 import QuickActionCard from "@/components/admin/QuickActionCard";
 import { DataTable } from "@/components/common/DataTable";
+import { ROUTES } from "@/constants/routes";
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -35,12 +36,12 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     if (!isAuthenticated && !authLoading) {
-      navigate("/login", { replace: true });
+      navigate(ROUTES.LOGIN, { replace: true });
       return;
     }
 
     if (user?.role !== "admin" && !authLoading) {
-      navigate("/my-bookings", { replace: true });
+      navigate(ROUTES.USER.MY_BOOKINGS, { replace: true });
       return;
     }
 
@@ -50,7 +51,7 @@ export default function AdminDashboard() {
           setLoading(true);
           setError(null);
 
-          const res = await api.get("/admin/dashboard");
+          const res = await api.get(ROUTES.ADMIN.DASHBOARD);
           setData(res.data.data);
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (err: any) {

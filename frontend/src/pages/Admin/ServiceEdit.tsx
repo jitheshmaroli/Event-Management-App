@@ -9,6 +9,7 @@ import {
   fetchServiceById,
   updateService,
 } from "@/features/services/servicesThunks";
+import { ROUTES } from "@/constants/routes";
 
 export default function ServiceEdit() {
   const { id } = useParams<{ id: string }>();
@@ -29,7 +30,7 @@ export default function ServiceEdit() {
   useEffect(() => {
     if (!id || !hasAttemptedFetch) return;
     if (!loading && currentService === null) {
-      navigate("/admin/services", { replace: true });
+      navigate(ROUTES.ADMIN.SERVICES, { replace: true });
     }
   }, [id, hasAttemptedFetch, loading, currentService, navigate]);
 

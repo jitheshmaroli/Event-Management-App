@@ -13,9 +13,10 @@ import type { OtpPurpose, SendOtpData, User } from "@/lib/types";
 import { resetAuth } from "./authSlice";
 import type { Role } from "@/constants/roles";
 import { OTP_PURPOSE } from "@/constants/otpPurpose";
+import { AUTH_ACTIONS } from "@/constants/thunk.constants";
 
 export const checkCurrentUser = createAsyncThunk<User | null>(
-  "auth/checkCurrentUser",
+  AUTH_ACTIONS.CHECK_CURRENT_USER,
   async (_, { rejectWithValue }) => {
     try {
       const res = await getCurrentUser();
@@ -30,7 +31,7 @@ export const checkCurrentUser = createAsyncThunk<User | null>(
 );
 
 export const loginUser = createAsyncThunk(
-  "auth/login",
+  AUTH_ACTIONS.LOGIN,
   async (
     credentials: { email: string; password: string; loginType: Role },
     { rejectWithValue },
@@ -51,7 +52,7 @@ export const registerUser = createAsyncThunk<
   void,
   { name: string; email: string; password: string; phone?: string },
   { rejectValue: string }
->("auth/register", async (data, { rejectWithValue }) => {
+>(AUTH_ACTIONS.REGISTER, async (data, { rejectWithValue }) => {
   try {
     await register(data);
     return;
@@ -66,7 +67,7 @@ export const sendOtpThunk = createAsyncThunk<
   void,
   SendOtpData,
   { rejectValue: string }
->("auth/sendOtp", async (data, { rejectWithValue }) => {
+>(AUTH_ACTIONS.SEND_OTP, async (data, { rejectWithValue }) => {
   try {
     await sendOtp(data);
   } catch (err: any) {
@@ -84,50 +85,59 @@ export const verifyOtpThunk = createAsyncThunk<
   VerifyOtpResult,
   { email: string; otp: string; purpose: OtpPurpose },
   { rejectValue: string }
->("auth/verifyOtp", async ({ email, otp, purpose }, { rejectWithValue }) => {
-  try {
-    const data = await verifyOtp({ email, otp, purpose });
+>(
+  AUTH_ACTIONS.VERIFY_OTP,
+  async ({ email, otp, purpose }, { rejectWithValue }) => {
+    try {
+      const data = await verifyOtp({ email, otp, purpose });
 
-    if (purpose === OTP_PURPOSE.FORGOT_PASSWORD) {
-      // Forgot password response
-      if ("message" in data && typeof data.message === "string") {
-        return { purpose: OTP_PURPOSE.FORGOT_PASSWORD, message: data.message };
+      if (purpose === OTP_PURPOSE.FORGOT_PASSWORD) {
+        // Forgot password response
+        if ("message" in data && typeof data.message === "string") {
+          return {
+            purpose: OTP_PURPOSE.FORGOT_PASSWORD,
+            message: data.message,
+          };
+        } else {
+          throw new Error("Unexpected response format for forgot_password");
+        }
       } else {
-        throw new Error("Unexpected response format for forgot_password");
+        // Signup response
+        if (data.data) {
+          return { purpose: OTP_PURPOSE.SIGNUP, user: data.data };
+        } else {
+          throw new Error("Verification succeeded but no user data returned");
+        }
       }
-    } else {
-      // Signup response
-      if (data.data) {
-        return { purpose: OTP_PURPOSE.SIGNUP, user: data.data };
-      } else {
-        throw new Error("Verification succeeded but no user data returned");
-      }
+    } catch (err: any) {
+      return rejectWithValue(
+        err.response?.data?.message ||
+          err.message ||
+          "Invalid or expired OTP. Please try again.",
+      );
     }
-  } catch (err: any) {
-    return rejectWithValue(
-      err.response?.data?.message ||
-        err.message ||
-        "Invalid or expired OTP. Please try again.",
-    );
-  }
-});
+  },
+);
 
 export const resetPasswordThunk = createAsyncThunk<
   void,
   { email: string; newPassword: string },
   { rejectValue: string }
->("auth/resetPassword", async ({ email, newPassword }, { rejectWithValue }) => {
-  try {
-    await resetPassword(email, newPassword);
-  } catch (err: any) {
-    return rejectWithValue(
-      err.response?.data?.message || "Failed to reset password.",
-    );
-  }
-});
+>(
+  AUTH_ACTIONS.RESET_PASSWORD,
+  async ({ email, newPassword }, { rejectWithValue }) => {
+    try {
+      await resetPassword(email, newPassword);
+    } catch (err: any) {
+      return rejectWithValue(
+        err.response?.data?.message || "Failed to reset password.",
+      );
+    }
+  },
+);
 
 export const logoutUser = createAsyncThunk(
-  "auth/logout",
+  AUTH_ACTIONS.LOGOUT,
   async (_, { dispatch }) => {
     await logout();
     dispatch(resetAuth());

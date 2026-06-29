@@ -8,6 +8,7 @@ import { DataTable } from "@/components/common/DataTable";
 import Pagination from "@/components/common/Pagination";
 import { rupeeFormatter } from "@/utils/format";
 import type { ApiResponse, Booking } from "@/types/booking.types";
+import { ROUTES } from "@/constants/routes";
 
 export default function AdminBookings() {
   const navigate = useNavigate();
@@ -27,9 +28,9 @@ export default function AdminBookings() {
   const [page, setPage] = useState(1);
 
   useEffect(() => {
-    if (!isAuthenticated && !authLoading) navigate("/login", { replace: true });
+    if (!isAuthenticated && !authLoading) navigate(ROUTES.LOGIN, { replace: true });
     if (user?.role !== "admin" && !authLoading)
-      navigate("/my-bookings", { replace: true });
+      navigate(ROUTES.USER.MY_BOOKINGS, { replace: true });
   }, [isAuthenticated, authLoading, user?.role, navigate]);
 
   useEffect(() => {
@@ -43,7 +44,7 @@ export default function AdminBookings() {
         const params: Record<string, any> = { page, limit: 10 };
         if (statusFilter) params.status = statusFilter;
 
-        const res = await api.get<ApiResponse>("/admin/bookings", { params });
+        const res = await api.get<ApiResponse>(ROUTES.ADMIN.BOOKINGS, { params });
         const responseData = res.data.data;
 
         setBookings(responseData.data);

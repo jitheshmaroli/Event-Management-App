@@ -7,6 +7,7 @@ import { loadRazorpayScript } from "@/utils/razorpayLoader";
 import { RAZORPAY_KEY_ID } from "@/constants/booking.constants";
 import { showError, showSuccess } from "@/utils/toast";
 import api from "@/lib/api";
+import { ROUTES } from "@/constants/routes";
 
 export default function PaymentPage() {
   const location = useLocation();
@@ -44,7 +45,7 @@ export default function PaymentPage() {
         showError("Could not update server. Contact support if needed.");
       }
 
-      navigate("/bookings/failed", { replace: true });
+      navigate(ROUTES.USER.BOOKING_FAILED, { replace: true });
     },
     [bookingId, navigate],
   );
@@ -98,7 +99,7 @@ export default function PaymentPage() {
             document.body.style.paddingRight = "";
 
             showSuccess("Payment successful! Booking confirmed.");
-            navigate("/bookings/success", { replace: true });
+            navigate(ROUTES.USER.BOOKING_SUCCESS, { replace: true });
           } catch (err) {
             console.error("Verification failed:", err);
             await cancelBooking("Payment verification failed");

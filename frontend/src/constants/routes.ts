@@ -37,6 +37,18 @@ export const ROUTES = {
   // Error routes
   NOT_FOUND: "/404",
   UNAUTHORIZED: "/unauthorized",
+
+  //API ROUTES
+  API: {
+    REFRESH: "/auth/refresh",
+    LOGIN: "/auth/login",
+    REGISTER: "/auth/register",
+    SEND_OTP: "/auth/send-otp",
+    VERIFY_OTP: "/auth/verify-otp",
+    RESET_PASSWORD: "/auth/reset-password",
+    CURRENT_USER: "/auth/me",
+    LOGOUT: "/auth/logout"
+  },
 } as const;
 
 // Helper functions for dynamic routes

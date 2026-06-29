@@ -8,6 +8,7 @@ import { DataTable } from "@/components/common/DataTable";
 import Pagination from "@/components/common/Pagination";
 import SearchBar from "@/components/common/SearchBar";
 import { useServiceQuery } from "@/hooks/useServiceQuery";
+import { ROUTES } from "@/constants/routes";
 
 interface User {
   _id: string;
@@ -50,9 +51,10 @@ export default function AdminUsers() {
   const { queryState, setSearch, setPage } = useServiceQuery();
 
   useEffect(() => {
-    if (!isAuthenticated && !authLoading) navigate("/login", { replace: true });
+    if (!isAuthenticated && !authLoading)
+      navigate(ROUTES.LOGIN, { replace: true });
     if (user?.role !== "admin" && !authLoading)
-      navigate("/my-bookings", { replace: true });
+      navigate(ROUTES.USER.MY_BOOKINGS, { replace: true });
   }, [isAuthenticated, authLoading, user?.role, navigate]);
 
   useEffect(() => {
@@ -63,7 +65,7 @@ export default function AdminUsers() {
         setLoading(true);
         setError(null);
 
-        const res = await api.get<ApiResponse>("/admin/users", {
+        const res = await api.get<ApiResponse>(ROUTES.ADMIN.USERS, {
           params: {
             search: queryState.search,
             page: queryState.page,

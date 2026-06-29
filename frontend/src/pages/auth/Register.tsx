@@ -19,6 +19,7 @@ import { useAppDispatch } from "@/hooks/useAppDispatch";
 import { useAppSelector } from "@/hooks/useAppSelector";
 import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import { registerUser } from "@/features/auth/authThunk";
+import { ROUTES } from "@/constants/routes";
 
 const phoneRegex = /^[6-9]\d{9}$/;
 
@@ -174,7 +175,7 @@ export default function Register() {
     );
 
     if (registerUser.fulfilled.match(result)) {
-      navigate("/verify-otp", {
+      navigate(ROUTES.VERIFY_OTP, {
         state: { email: form.email.trim(), purpose: OTP_PURPOSE.SIGNUP },
       });
     }

@@ -1,8 +1,9 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import api from "@/lib/api";
+import { BOOKING_ACTIONS } from "@/constants/thunk.constants";
 
 export const createBooking = createAsyncThunk(
-  "bookings/create",
+  BOOKING_ACTIONS.CREATE,
   async ({
     serviceId,
     startDate,
@@ -18,7 +19,7 @@ export const createBooking = createAsyncThunk(
 );
 
 export const verifyPayment = createAsyncThunk(
-  "bookings/verifyPayment",
+  BOOKING_ACTIONS.VERIFY_PAYMENT,
   async (paymentData: {
     razorpay_order_id: string;
     razorpay_payment_id: string;
@@ -30,7 +31,7 @@ export const verifyPayment = createAsyncThunk(
 );
 
 export const cancelBooking = createAsyncThunk(
-  "bookings/cancel",
+  BOOKING_ACTIONS.CANCEL,
   async (bookingId: string) => {
     const res = await api.patch(`/booking/${bookingId}/cancel`);
     return res.data.data.booking;
@@ -38,7 +39,7 @@ export const cancelBooking = createAsyncThunk(
 );
 
 export const fetchUserBookings = createAsyncThunk(
-  "bookings/fetchMyBookings",
+  BOOKING_ACTIONS.FETCH,
   async () => {
     const res = await api.get("/booking/my-bookings");
     return res.data.data;

@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { SERVICE_ACTIONS } from "@/constants/thunk.constants";
 import api from "@/lib/api";
 import type {
   ServiceFormData,
@@ -8,7 +9,7 @@ import type { PaginatedResponse } from "@/types/service.types";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 
 export const fetchServices = createAsyncThunk(
-  "services/fetchAll",
+  SERVICE_ACTIONS.FETCH_ALL,
   async (query: ServiceQueryParams = {}, { rejectWithValue }) => {
     try {
       const response = await api.get("/service", { params: query });
@@ -22,7 +23,7 @@ export const fetchServices = createAsyncThunk(
 );
 
 export const fetchServiceById = createAsyncThunk(
-  "services/fetchById",
+  SERVICE_ACTIONS.FETCH_BY_ID,
   async (id: string, { rejectWithValue }) => {
     try {
       const response = await api.get(`/service/${id}`);
@@ -34,7 +35,7 @@ export const fetchServiceById = createAsyncThunk(
 );
 
 export const createService = createAsyncThunk(
-  "services/create",
+  SERVICE_ACTIONS.CREATE,
   async (data: ServiceFormData, { rejectWithValue }) => {
     try {
       const formData = new FormData();
@@ -74,7 +75,7 @@ export const createService = createAsyncThunk(
 );
 
 export const updateService = createAsyncThunk(
-  "services/update",
+  SERVICE_ACTIONS.UPDATE,
   async (
     { id, data }: { id: string; data: Partial<ServiceFormData> },
     { rejectWithValue },
@@ -132,7 +133,7 @@ export const updateService = createAsyncThunk(
 );
 
 export const deleteService = createAsyncThunk(
-  "services/delete",
+  SERVICE_ACTIONS.DELETE,
   async (id: string, { rejectWithValue }) => {
     try {
       await api.delete(`/admin/service/${id}`);
@@ -144,7 +145,7 @@ export const deleteService = createAsyncThunk(
 );
 
 export const fetchAvailability = createAsyncThunk(
-  "services/fetchAvailability",
+  SERVICE_ACTIONS.AVAILABILITY,
   async (
     { id, year, month }: { id: string; year: number; month: number },
     { rejectWithValue },
