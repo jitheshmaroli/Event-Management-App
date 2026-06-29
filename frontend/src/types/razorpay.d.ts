@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 export {};
 
 declare global {
@@ -15,7 +14,7 @@ declare global {
     name: string;
     description?: string;
     order_id: string;
-    handler: (response: any) => void;
+    handler: (response) => void;
     prefill?: {
       name?: string;
       email?: string;

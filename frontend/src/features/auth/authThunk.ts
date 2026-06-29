@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import {
   getCurrentUser,
@@ -14,18 +13,16 @@ import { resetAuth } from "./authSlice";
 import type { Role } from "@/constants/roles";
 import { OTP_PURPOSE } from "@/constants/otpPurpose";
 import { AUTH_ACTIONS } from "@/constants/thunk.constants";
+import { getErrorMessage } from "@/lib/errorMessage";
 
-export const checkCurrentUser = createAsyncThunk<User | null>(
+export const checkCurrentUser = createAsyncThunk(
   AUTH_ACTIONS.CHECK_CURRENT_USER,
   async (_, { rejectWithValue }) => {
     try {
       const res = await getCurrentUser();
       return res?.data?.user ?? null;
-    } catch (err: any) {
-      if (err.response?.status === 401 || err.response?.status === 403) {
-        return null;
-      }
-      return rejectWithValue(err.response?.data?.message || "Session expired");
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error));
     }
   },
 );
@@ -42,8 +39,8 @@ export const loginUser = createAsyncThunk(
       const user = res?.data?.user;
       if (!user) throw new Error("No user data after login");
       return user;
-    } catch (err: any) {
-      return rejectWithValue(err.response?.data?.message || "Login failed");
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error));
     }
   },
 );
@@ -56,10 +53,8 @@ export const registerUser = createAsyncThunk<
   try {
     await register(data);
     return;
-  } catch (err: any) {
-    return rejectWithValue(
-      err.response?.data?.message || "Registration failed. Please try again.",
-    );
+  } catch (error) {
+    return rejectWithValue(getErrorMessage(error));
   }
 });
 
@@ -70,10 +65,8 @@ export const sendOtpThunk = createAsyncThunk<
 >(AUTH_ACTIONS.SEND_OTP, async (data, { rejectWithValue }) => {
   try {
     await sendOtp(data);
-  } catch (err: any) {
-    return rejectWithValue(
-      err.response?.data?.message || "Failed to send OTP. Try again.",
-    );
+  } catch (error) {
+    return rejectWithValue(getErrorMessage(error));
   }
 });
 
@@ -109,12 +102,8 @@ export const verifyOtpThunk = createAsyncThunk<
           throw new Error("Verification succeeded but no user data returned");
         }
       }
-    } catch (err: any) {
-      return rejectWithValue(
-        err.response?.data?.message ||
-          err.message ||
-          "Invalid or expired OTP. Please try again.",
-      );
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error));
     }
   },
 );
@@ -128,10 +117,8 @@ export const resetPasswordThunk = createAsyncThunk<
   async ({ email, newPassword }, { rejectWithValue }) => {
     try {
       await resetPassword(email, newPassword);
-    } catch (err: any) {
-      return rejectWithValue(
-        err.response?.data?.message || "Failed to reset password.",
-      );
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error));
     }
   },
 );

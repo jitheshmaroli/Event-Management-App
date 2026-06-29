@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { SERVICE_ACTIONS } from "@/constants/thunk.constants";
+import { getErrorMessage } from "@/lib/errorMessage";
 import {
   createServiceApi,
   deleteServiceApi,
@@ -9,6 +9,7 @@ import {
   updateServiceApi,
 } from "@/lib/services";
 import type {
+  Service,
   ServiceFormData,
   ServiceQueryParams,
 } from "@/types/service.types";
@@ -20,11 +21,9 @@ export const fetchServices = createAsyncThunk(
   async (query: ServiceQueryParams = {}, { rejectWithValue }) => {
     try {
       const response = await fetchServicesApi(query);
-      return response.data.data as PaginatedResponse<any>;
-    } catch (error: any) {
-      return rejectWithValue(
-        error.response?.data?.message || "Failed to load services",
-      );
+      return response.data.data as PaginatedResponse<Service>;
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error));
     }
   },
 );
@@ -35,8 +34,8 @@ export const fetchServiceById = createAsyncThunk(
     try {
       const response = await fetchServiceByIdApi(id);
       return response.data.data;
-    } catch {
-      return rejectWithValue("Failed to load service");
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error));
     }
   },
 );
@@ -75,8 +74,8 @@ export const createService = createAsyncThunk(
       const response = await createServiceApi(formData);
 
       return response.data.data;
-    } catch {
-      return rejectWithValue("Failed to create service");
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error));
     }
   },
 );
@@ -126,13 +125,11 @@ export const updateService = createAsyncThunk(
         );
       }
 
-      const response = await updateServiceApi({id, data: formData})
+      const response = await updateServiceApi({ id, data: formData });
 
       return response.data.data;
-    } catch (err: any) {
-      return rejectWithValue(
-        err.response?.data?.message || "Failed to update service",
-      );
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error));
     }
   },
 );
@@ -143,8 +140,8 @@ export const deleteService = createAsyncThunk(
     try {
       await deleteServiceApi(id);
       return id;
-    } catch {
-      return rejectWithValue("Failed to delete service");
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error));
     }
   },
 );
@@ -158,8 +155,8 @@ export const fetchAvailability = createAsyncThunk(
     try {
       const response = await fetchAvailabilityApi({ id, year, month });
       return { year, month, data: response.data.data };
-    } catch {
-      return rejectWithValue("Failed to load availability");
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error));
     }
   },
 );
