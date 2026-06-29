@@ -1,6 +1,11 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import api from "@/lib/api";
 import { BOOKING_ACTIONS } from "@/constants/thunk.constants";
+import {
+  cancelBookingApi,
+  createBookingApi,
+  fetchUserBookingsApi,
+  verifyPaymentApi,
+} from "@/lib/booking";
 
 export const createBooking = createAsyncThunk(
   BOOKING_ACTIONS.CREATE,
@@ -13,7 +18,7 @@ export const createBooking = createAsyncThunk(
     startDate: string;
     endDate: string;
   }) => {
-    const res = await api.post("/booking", { serviceId, startDate, endDate });
+    const res = await createBookingApi({ serviceId, startDate, endDate });
     return res.data.data;
   },
 );
@@ -25,7 +30,7 @@ export const verifyPayment = createAsyncThunk(
     razorpay_payment_id: string;
     razorpay_signature: string;
   }) => {
-    const res = await api.post("/booking/verify-payment", paymentData);
+    const res = await verifyPaymentApi(paymentData);
     return res.data.data.booking;
   },
 );
@@ -33,7 +38,7 @@ export const verifyPayment = createAsyncThunk(
 export const cancelBooking = createAsyncThunk(
   BOOKING_ACTIONS.CANCEL,
   async (bookingId: string) => {
-    const res = await api.patch(`/booking/${bookingId}/cancel`);
+    const res = await cancelBookingApi(bookingId);
     return res.data.data.booking;
   },
 );
@@ -41,7 +46,7 @@ export const cancelBooking = createAsyncThunk(
 export const fetchUserBookings = createAsyncThunk(
   BOOKING_ACTIONS.FETCH,
   async () => {
-    const res = await api.get("/booking/my-bookings");
+    const res = await fetchUserBookingsApi();
     return res.data.data;
   },
 );

@@ -1,6 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { SERVICE_ACTIONS } from "@/constants/thunk.constants";
-import api from "@/lib/api";
+import {
+  createServiceApi,
+  deleteServiceApi,
+  fetchAvailabilityApi,
+  fetchServiceByIdApi,
+  fetchServicesApi,
+  updateServiceApi,
+} from "@/lib/services";
 import type {
   ServiceFormData,
   ServiceQueryParams,
@@ -12,7 +19,7 @@ export const fetchServices = createAsyncThunk(
   SERVICE_ACTIONS.FETCH_ALL,
   async (query: ServiceQueryParams = {}, { rejectWithValue }) => {
     try {
-      const response = await api.get("/service", { params: query });
+      const response = await fetchServicesApi(query);
       return response.data.data as PaginatedResponse<any>;
     } catch (error: any) {
       return rejectWithValue(
@@ -26,7 +33,7 @@ export const fetchServiceById = createAsyncThunk(
   SERVICE_ACTIONS.FETCH_BY_ID,
   async (id: string, { rejectWithValue }) => {
     try {
-      const response = await api.get(`/service/${id}`);
+      const response = await fetchServiceByIdApi(id);
       return response.data.data;
     } catch {
       return rejectWithValue("Failed to load service");
@@ -65,7 +72,7 @@ export const createService = createAsyncThunk(
         });
       }
 
-      const response = await api.post("/admin/service", formData);
+      const response = await createServiceApi(formData);
 
       return response.data.data;
     } catch {
@@ -119,9 +126,7 @@ export const updateService = createAsyncThunk(
         );
       }
 
-      const response = await api.put(`/admin/service/${id}`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      const response = await updateServiceApi({id, data: formData})
 
       return response.data.data;
     } catch (err: any) {
@@ -136,7 +141,7 @@ export const deleteService = createAsyncThunk(
   SERVICE_ACTIONS.DELETE,
   async (id: string, { rejectWithValue }) => {
     try {
-      await api.delete(`/admin/service/${id}`);
+      await deleteServiceApi(id);
       return id;
     } catch {
       return rejectWithValue("Failed to delete service");
@@ -151,9 +156,7 @@ export const fetchAvailability = createAsyncThunk(
     { rejectWithValue },
   ) => {
     try {
-      const response = await api.get(`/service/${id}/availability`, {
-        params: { year, month },
-      });
+      const response = await fetchAvailabilityApi({ id, year, month });
       return { year, month, data: response.data.data };
     } catch {
       return rejectWithValue("Failed to load availability");

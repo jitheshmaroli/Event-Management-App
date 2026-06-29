@@ -47,13 +47,18 @@ export const ROUTES = {
     VERIFY_OTP: "/auth/verify-otp",
     RESET_PASSWORD: "/auth/reset-password",
     CURRENT_USER: "/auth/me",
-    LOGOUT: "/auth/logout"
+    LOGOUT: "/auth/logout",
+    BOOKING: "/booking",
+    MY_BOOKINGS: "/booking/my-bookings",
+    VERIFY_PAYMENT: "/booking/verify-payment",
+    ADMIN_SERVICE: "/admin/service",
+    SERVICE: "/service",
   },
 } as const;
 
 // Helper functions for dynamic routes
 export const getServiceDetailPath = (id: string | number): string =>
-  `/services/${id}`;
+  `/service/${id}`;
 
 export const getBookingNewPath = (serviceId: string | number): string =>
   `/bookings/new/${serviceId}`;
@@ -63,3 +68,12 @@ export const getAdminServiceViewPath = (id: string | number): string =>
 
 export const getAdminServiceEditPath = (id: string | number): string =>
   `/admin/services/${id}/edit`;
+
+export const cancelBookingEditPath = (id: string | number): string =>
+  `/booking/${id}/cancel`;
+
+export const serviceAvailabilityEditPath = (id: string | number): string =>
+  `/service/${id}/availability`;
+
+export const serviceEditPath = (id: string | number): string =>
+  `/admin/service/${id}`;
