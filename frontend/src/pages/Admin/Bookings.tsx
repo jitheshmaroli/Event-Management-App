@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AlertCircle } from "lucide-react";
@@ -8,6 +7,8 @@ import { DataTable } from "@/components/common/DataTable";
 import Pagination from "@/components/common/Pagination";
 import { rupeeFormatter } from "@/utils/format";
 import type { ApiResponse, Booking } from "@/types/booking.types";
+import { ROUTES } from "@/constants/routes";
+import { getErrorMessage } from "@/lib/errorMessage";
 
 export default function AdminBookings() {
   const navigate = useNavigate();
@@ -27,9 +28,10 @@ export default function AdminBookings() {
   const [page, setPage] = useState(1);
 
   useEffect(() => {
-    if (!isAuthenticated && !authLoading) navigate("/login", { replace: true });
+    if (!isAuthenticated && !authLoading)
+      navigate(ROUTES.LOGIN, { replace: true });
     if (user?.role !== "admin" && !authLoading)
-      navigate("/my-bookings", { replace: true });
+      navigate(ROUTES.USER.MY_BOOKINGS, { replace: true });
   }, [isAuthenticated, authLoading, user?.role, navigate]);
 
   useEffect(() => {
@@ -40,16 +42,18 @@ export default function AdminBookings() {
         setLoading(true);
         setError(null);
 
-        const params: Record<string, any> = { page, limit: 10 };
+        const params: Record<string, string | number> = { page, limit: 10 };
         if (statusFilter) params.status = statusFilter;
 
-        const res = await api.get<ApiResponse>("/admin/bookings", { params });
+        const res = await api.get<ApiResponse>(ROUTES.ADMIN.BOOKINGS, {
+          params,
+        });
         const responseData = res.data.data;
 
         setBookings(responseData.data);
         setPagination(responseData.pagination);
-      } catch (err: any) {
-        setError(err.response?.data?.message || "Failed to load bookings");
+      } catch (error) {
+        setError(getErrorMessage(error));
       } finally {
         setLoading(false);
       }

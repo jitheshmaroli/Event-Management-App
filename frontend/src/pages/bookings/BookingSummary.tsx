@@ -3,6 +3,7 @@ import RefundPolicy from "@/components/booking/RefundPolicy";
 import { Button } from "@/components/ui/Button";
 import PriceBreakdown from "@/components/booking/PriceBreakDown";
 import { showError } from "@/utils/toast";
+import { ROUTES } from "@/constants/routes";
 
 export default function BookingSummary() {
   const { state } = useLocation();
@@ -39,7 +40,7 @@ export default function BookingSummary() {
             showError("Invalid booking data");
             return;
           }
-          navigate("/bookings/payment", {
+          navigate(ROUTES.USER.BOOKING_PAYMENT, {
             state: { order, bookingId: booking._id },
           });
         }}

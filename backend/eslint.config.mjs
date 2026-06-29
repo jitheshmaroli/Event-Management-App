@@ -12,7 +12,7 @@ export default tseslint.config(
     },
     rules: {
       'prettier/prettier': 'error', // Report Prettier errors as ESLint errors
-      // Add any custom ESLint rules here
+      // Add custom ESLint rules here
     },
   },
   prettierConfig, // Must be last to disable conflicting rules

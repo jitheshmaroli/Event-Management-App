@@ -55,3 +55,27 @@ export interface PaginatedResponse<T> {
     pages: number;
   };
 }
+
+export interface ServiceDTO {
+  _id: string;
+  title: string;
+  category: ServiceCategory;
+  description: string;
+  pricePerDay: number;
+  location: string;
+  phone: string;
+  images: string[];
+  availability: {
+    availableRanges: Array<{
+      from: Date;
+      to: Date;
+    }>;
+    bookedRanges: Array<{
+      from: Date;
+      to: Date;
+      reason?: string;
+    }>;
+  };
+  createdAt?: Date;
+  updatedAt?: Date;
+}

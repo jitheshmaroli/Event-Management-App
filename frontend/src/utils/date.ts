@@ -22,7 +22,7 @@ export const fromDateKey = (input: string | Date): Date => {
   return new Date(y, m - 1, d);
 };
 
-// Normalize any input to yyyy-MM-dd
+// Normalize input to yyyy-MM-dd
 export const normalizeDateString = (input: string | Date): string => {
   if (input instanceof Date) return toDateKey(input);
 

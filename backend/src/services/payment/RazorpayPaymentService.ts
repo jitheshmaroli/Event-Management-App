@@ -1,13 +1,13 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import Razorpay from 'razorpay';
 import crypto from 'crypto';
 import { injectable } from 'inversify';
+import { IPaymentService } from '@/interfaces/services/IPaymentService';
+import { BadRequestError } from '@/utils/errors';
 import {
-  IPaymentService,
   PaymentOrderResponse,
   PaymentVerificationData,
-} from '@/interfaces/services/IPaymentService';
-import { BadRequestError } from '@/utils/errors';
+  RazorpayRefundResponse,
+} from '@/types/razorpay';
 
 @injectable()
 export class RazorpayPaymentService implements IPaymentService {
@@ -50,15 +50,19 @@ export class RazorpayPaymentService implements IPaymentService {
     return generatedSignature === razorpay_signature;
   }
 
-  async refundPayment(paymentId: string, amount?: number): Promise<any> {
+  async refundPayment(
+    paymentId: string,
+    amount?: number
+  ): Promise<RazorpayRefundResponse> {
     try {
       const refund = await this._razorpay.payments.refund(paymentId, {
         amount: amount ? amount * 100 : undefined,
       });
-      return refund;
-    } catch (err: any) {
+      return refund as RazorpayRefundResponse;
+    } catch (err: unknown) {
+      const error = err as Error & { description?: string };
       throw new BadRequestError(
-        `Refund failed: ${err.description || err.message}`
+        `Refund failed: ${error.description || error.message}`
       );
     }
   }

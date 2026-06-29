@@ -1,3 +1,4 @@
+import { ROUTES } from "@/constants/routes";
 import axios from "axios";
 
 const api = axios.create({
@@ -13,12 +14,12 @@ api.interceptors.response.use(
     if (
       error.response?.status === 401 &&
       !originalRequest._retry &&
-      !originalRequest.url?.includes("/auth/refresh")
+      !originalRequest.url?.includes(ROUTES.API.REFRESH)
     ) {
       originalRequest._retry = true;
 
       try {
-        await api.post("/auth/refresh");
+        await api.post(ROUTES.API.REFRESH);
         return api(originalRequest);
       } catch (refreshError) {
         console.log("Refresh failed → going to login", refreshError);

@@ -5,6 +5,8 @@ import {
   ProjectionType,
   QueryOptions,
   QueryFilter,
+  PopulateOptions,
+  SortOrder,
 } from 'mongoose';
 import { IBaseRepository } from '@/interfaces/repositories/IBaseRepository';
 
@@ -44,9 +46,8 @@ export abstract class BaseRepository<T> implements IBaseRepository<T> {
     options: {
       skip?: number;
       limit?: number;
-      sort?: Record<string, 1 | -1 | string>;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      populate?: any;
+      sort?: Record<string, SortOrder> | string;
+      populate?: PopulateOptions | (string | PopulateOptions)[];
       session?: ClientSession;
     } = {}
   ): Promise<T[]> {
@@ -55,8 +56,7 @@ export abstract class BaseRepository<T> implements IBaseRepository<T> {
     if (options.session) query = query.session(options.session);
     if (options.skip !== undefined) query = query.skip(options.skip);
     if (options.limit !== undefined) query = query.limit(options.limit);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if (options.sort) query = query.sort(options.sort as any);
+    if (options.sort) query = query.sort(options.sort);
     if (options.populate) query = query.populate(options.populate);
 
     return query.lean().exec() as Promise<T[]>;

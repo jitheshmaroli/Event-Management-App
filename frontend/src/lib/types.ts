@@ -19,6 +19,21 @@ export interface ApiResponse<T = any> {
   errors?: string[];
 }
 
+export interface ApiErrorResponse {
+  response?: {
+    status?: number;
+    data?: {
+      success?: boolean;
+      message?: string;
+      error?: {
+        code?: string;
+        details?: unknown;
+      };
+    };
+  };
+  message?: string;
+}
+
 export interface LoginCredentials {
   email: string;
   password: string;

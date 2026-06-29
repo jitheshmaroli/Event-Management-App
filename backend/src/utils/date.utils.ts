@@ -1,4 +1,4 @@
-//  Convert any date input to UTC midnight Date object
+//  Convert date input to UTC midnight Date object
 export const toUtcMidnight = (input: string | Date): Date => {
   if (typeof input === 'string') {
     const [y, m, d] = input.split('T')[0].split('-').map(Number);

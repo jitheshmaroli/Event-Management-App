@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useRef, useCallback, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAppDispatch } from "@/hooks/useAppDispatch";
@@ -7,6 +6,13 @@ import { loadRazorpayScript } from "@/utils/razorpayLoader";
 import { RAZORPAY_KEY_ID } from "@/constants/booking.constants";
 import { showError, showSuccess } from "@/utils/toast";
 import api from "@/lib/api";
+import { ROUTES } from "@/constants/routes";
+import type {
+  RazorpayFailedResponse,
+  RazorpayInstance,
+  RazorpayOptions,
+  RazorpaySuccessResponse,
+} from "@/types/razorpay";
 
 export default function PaymentPage() {
   const location = useLocation();
@@ -15,7 +21,7 @@ export default function PaymentPage() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
-  const razorpayRef = useRef<any>(null);
+  const razorpayRef = useRef<RazorpayInstance | null>(null);
   const timeoutRef = useRef<number | null>(null);
   const hasCancelled = useRef(false);
   const mountedRef = useRef(true);
@@ -44,7 +50,7 @@ export default function PaymentPage() {
         showError("Could not update server. Contact support if needed.");
       }
 
-      navigate("/bookings/failed", { replace: true });
+      navigate(ROUTES.USER.BOOKING_FAILED, { replace: true });
     },
     [bookingId, navigate],
   );
@@ -72,7 +78,7 @@ export default function PaymentPage() {
 
       setStatusMessage("Opening payment window...");
 
-      const options = {
+      const options: RazorpayOptions = {
         key: RAZORPAY_KEY_ID,
         amount: order.amount * 100,
         currency: order.currency,
@@ -81,7 +87,7 @@ export default function PaymentPage() {
         order_id: order.id,
 
         // SUCCESS HANDLER
-        handler: async (response: any) => {
+        handler: async (response: RazorpaySuccessResponse) => {
           if (!mountedRef.current) return;
 
           setStatusMessage("Verifying payment...");
@@ -98,7 +104,7 @@ export default function PaymentPage() {
             document.body.style.paddingRight = "";
 
             showSuccess("Payment successful! Booking confirmed.");
-            navigate("/bookings/success", { replace: true });
+            navigate(ROUTES.USER.BOOKING_SUCCESS, { replace: true });
           } catch (err) {
             console.error("Verification failed:", err);
             await cancelBooking("Payment verification failed");
@@ -109,8 +115,6 @@ export default function PaymentPage() {
         modal: {
           ondismiss: async () => {
             if (!mountedRef.current || hasCancelled.current) return;
-
-            console.log("Modal dismissed");
 
             // Clear timeout
             if (timeoutRef.current) {
@@ -136,10 +140,14 @@ export default function PaymentPage() {
       };
 
       try {
-        razorpayRef.current = new (window as any).Razorpay(options);
+        const RazorpayConstructor = (window as Window & typeof globalThis)
+          .Razorpay;
+        razorpayRef.current = new RazorpayConstructor(
+          options,
+        ) as RazorpayInstance;
 
         // PAYMENT FAILED EVENT
-        razorpayRef.current.on("payment.failed", (response: any) => {
+        razorpayRef.current.on("payment.failed", (response: RazorpayFailedResponse) => {
           console.log("Payment failed:", response);
           // cancelBooking("Payment failed on gateway");
         });

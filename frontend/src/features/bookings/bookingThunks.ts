@@ -1,46 +1,75 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import api from "@/lib/api";
+import { BOOKING_ACTIONS } from "@/constants/thunk.constants";
+import {
+  cancelBookingApi,
+  createBookingApi,
+  fetchUserBookingsApi,
+  verifyPaymentApi,
+} from "@/lib/booking";
+import { getErrorMessage } from "@/lib/errorMessage";
 
 export const createBooking = createAsyncThunk(
-  "bookings/create",
-  async ({
-    serviceId,
-    startDate,
-    endDate,
-  }: {
-    serviceId: string;
-    startDate: string;
-    endDate: string;
-  }) => {
-    const res = await api.post("/booking", { serviceId, startDate, endDate });
-    return res.data.data;
+  BOOKING_ACTIONS.CREATE,
+  async (
+    {
+      serviceId,
+      startDate,
+      endDate,
+    }: {
+      serviceId: string;
+      startDate: string;
+      endDate: string;
+    },
+    { rejectWithValue },
+  ) => {
+    try {
+      const res = await createBookingApi({ serviceId, startDate, endDate });
+      return res.data.data;
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error));
+    }
   },
 );
 
 export const verifyPayment = createAsyncThunk(
-  "bookings/verifyPayment",
-  async (paymentData: {
-    razorpay_order_id: string;
-    razorpay_payment_id: string;
-    razorpay_signature: string;
-  }) => {
-    const res = await api.post("/booking/verify-payment", paymentData);
-    return res.data.data.booking;
+  BOOKING_ACTIONS.VERIFY_PAYMENT,
+  async (
+    paymentData: {
+      razorpay_order_id: string;
+      razorpay_payment_id: string;
+      razorpay_signature: string;
+    },
+    { rejectWithValue },
+  ) => {
+    try {
+      const res = await verifyPaymentApi(paymentData);
+      return res.data.data.booking;
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error));
+    }
   },
 );
 
 export const cancelBooking = createAsyncThunk(
-  "bookings/cancel",
-  async (bookingId: string) => {
-    const res = await api.patch(`/booking/${bookingId}/cancel`);
-    return res.data.data.booking;
+  BOOKING_ACTIONS.CANCEL,
+  async (bookingId: string, { rejectWithValue }) => {
+    try {
+      const res = await cancelBookingApi(bookingId);
+      return res.data.data.booking;
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error));
+    }
   },
 );
 
 export const fetchUserBookings = createAsyncThunk(
-  "bookings/fetchMyBookings",
-  async () => {
-    const res = await api.get("/booking/my-bookings");
-    return res.data.data;
+  BOOKING_ACTIONS.FETCH,
+  async (_, { rejectWithValue }) => {
+    try {
+      const res = await fetchUserBookingsApi();
+      return res.data.data;
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error));
+    }
   },
 );

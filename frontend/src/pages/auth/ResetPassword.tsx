@@ -5,6 +5,7 @@ import { useAppDispatch } from "@/hooks/useAppDispatch";
 import { resetPasswordThunk } from "@/features/auth/authThunk.ts";
 import { useAppSelector } from "@/hooks/useAppSelector";
 import type { ResetPasswordState } from "@/lib/types";
+import { ROUTES } from "@/constants/routes";
 
 export default function ResetPassword() {
   const navigate = useNavigate();
@@ -26,7 +27,7 @@ export default function ResetPassword() {
 
   useEffect(() => {
     if (!email) {
-      navigate("/forgot-password", { replace: true });
+      navigate(ROUTES.FORGOT_PASSWORD, { replace: true });
     }
   }, [email, navigate, dispatch]);
 
@@ -52,7 +53,7 @@ export default function ResetPassword() {
 
     if (resetPasswordThunk.fulfilled.match(result)) {
       setSuccess(true);
-      setTimeout(() => navigate("/login", { replace: true }), 2200);
+      setTimeout(() => navigate(ROUTES.LOGIN, { replace: true }), 2200);
     }
   };
 
@@ -131,7 +132,8 @@ export default function ResetPassword() {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
                       {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                     </button>
                   </div>
@@ -160,7 +162,8 @@ export default function ResetPassword() {
                     <button
                       type="button"
                       onClick={() => setShowConfirm(!showConfirm)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
                       {showConfirm ? <EyeOff size={20} /> : <Eye size={20} />}
                     </button>
                   </div>
@@ -169,7 +172,8 @@ export default function ResetPassword() {
                 <button
                   type="submit"
                   disabled={isLoading || success}
-                  className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3.5 px-6 rounded-xl font-medium hover:from-indigo-700 hover:to-purple-700 disabled:opacity-60 transition-all transform hover:scale-[1.02] flex items-center justify-center gap-3">
+                  className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3.5 px-6 rounded-xl font-medium hover:from-indigo-700 hover:to-purple-700 disabled:opacity-60 transition-all transform hover:scale-[1.02] flex items-center justify-center gap-3"
+                >
                   {isLoading ? (
                     <>
                       <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -185,7 +189,8 @@ export default function ResetPassword() {
             <div className="mt-8 text-center">
               <Link
                 to="/login"
-                className="text-sm text-indigo-600 hover:text-indigo-700 transition-colors">
+                className="text-sm text-indigo-600 hover:text-indigo-700 transition-colors"
+              >
                 Back to login
               </Link>
             </div>

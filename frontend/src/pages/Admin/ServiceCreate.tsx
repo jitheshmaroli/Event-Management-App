@@ -4,6 +4,7 @@ import { createService } from "@/features/services/servicesThunks";
 import ServiceForm from "@/components/admin/ServiceForm";
 import { useAppDispatch } from "@/hooks/useAppDispatch";
 import type { ServiceFormData } from "@/types/service.types";
+import { ROUTES } from "@/constants/routes";
 
 export default function ServiceCreate() {
   const dispatch = useAppDispatch();
@@ -13,7 +14,7 @@ export default function ServiceCreate() {
   const handleSubmit = async (data: ServiceFormData) => {
     try {
       await dispatch(createService(data)).unwrap();
-      navigate("/admin/services");
+      navigate(ROUTES.ADMIN.SERVICES);
     } catch (err) {
       console.error("Create failed:", err);
     }
