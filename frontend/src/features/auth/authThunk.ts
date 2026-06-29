@@ -14,6 +14,7 @@ import type { Role } from "@/constants/roles";
 import { OTP_PURPOSE } from "@/constants/otpPurpose";
 import { AUTH_ACTIONS } from "@/constants/thunk.constants";
 import { getErrorMessage } from "@/lib/errorMessage";
+import { isAxiosError } from "axios";
 
 export const checkCurrentUser = createAsyncThunk(
   AUTH_ACTIONS.CHECK_CURRENT_USER,
@@ -22,6 +23,12 @@ export const checkCurrentUser = createAsyncThunk(
       const res = await getCurrentUser();
       return res?.data?.user ?? null;
     } catch (error) {
+      if (
+        isAxiosError(error) &&
+        [401, 403].includes(error.response?.status ?? 0)
+      ) {
+        return null;
+      }
       return rejectWithValue(getErrorMessage(error));
     }
   },

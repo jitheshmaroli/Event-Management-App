@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -15,6 +14,7 @@ import { useAppSelector } from "@/hooks/useAppSelector";
 import { useAppDispatch } from "@/hooks/useAppDispatch";
 import api from "@/lib/api";
 import { setUser } from "@/features/auth/authSlice";
+import { getErrorMessage } from "@/lib/errorMessage";
 
 interface ProfileFormData {
   name: string;
@@ -75,8 +75,8 @@ export default function Profile() {
 
       setSuccessMessage("Profile updated successfully!");
       setTimeout(() => setSuccessMessage(null), 5000);
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Failed to update profile");
+    } catch (error) {
+      setError(getErrorMessage(error));
     } finally {
       setLoading(false);
     }

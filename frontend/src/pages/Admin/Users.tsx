@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AlertCircle } from "lucide-react";
@@ -9,6 +8,7 @@ import Pagination from "@/components/common/Pagination";
 import SearchBar from "@/components/common/SearchBar";
 import { useServiceQuery } from "@/hooks/useServiceQuery";
 import { ROUTES } from "@/constants/routes";
+import { getErrorMessage } from "@/lib/errorMessage";
 
 interface User {
   _id: string;
@@ -76,8 +76,8 @@ export default function AdminUsers() {
 
         setUsers(responseData.data);
         setPagination(responseData.pagination);
-      } catch (err: any) {
-        setError(err.response?.data?.message || "Failed to load users");
+      } catch (error) {
+        setError(getErrorMessage(error));
       } finally {
         setLoading(false);
       }

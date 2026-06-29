@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { injectable } from 'inversify';
 import {
   Booking,
@@ -7,7 +6,7 @@ import {
   PaymentStatus,
 } from '@/models/Booking';
 import { IBookingRepository } from '@/interfaces/repositories/IBookingRepository';
-import { ClientSession } from 'mongoose';
+import { ClientSession, QueryFilter } from 'mongoose';
 import { BaseRepository } from './BaseRepository';
 
 @injectable()
@@ -20,7 +19,7 @@ export class BookingRepository
   }
 
   async findByUser(userId: string, status?: string): Promise<IBooking[]> {
-    const query: any = { user: userId };
+    const query: QueryFilter<IBooking> = { user: userId };
     if (status) query.status = status;
     return this.model
       .find(query)
@@ -35,7 +34,7 @@ export class BookingRepository
     end: Date,
     excludeId?: string
   ): Promise<IBooking | null> {
-    const query: any = {
+    const query: QueryFilter<IBooking> = {
       service: serviceId,
       status: { $in: ['pending', 'confirmed'] },
       $or: [{ startDate: { $lte: end }, endDate: { $gte: start } }],
