@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { inject, injectable } from 'inversify';
 import { startSession, Types } from 'mongoose';
 import { TYPES } from '@/inversify/types';
@@ -21,6 +20,7 @@ import {
 } from '@/constants/booking.constants';
 import { addMinutes, differenceInDays, isBefore } from 'date-fns';
 import { toUtcMidnight } from '@/utils/date.utils';
+import { PaymentVerificationData } from '@/types/razorpay';
 
 @injectable()
 export class BookingService implements IBookingService {
@@ -141,7 +141,10 @@ export class BookingService implements IBookingService {
     }
   }
 
-  async verifyAndConfirmPayment(orderId: string, paymentData: any) {
+  async verifyAndConfirmPayment(
+    orderId: string,
+    paymentData: PaymentVerificationData
+  ) {
     const session = await startSession();
     session.startTransaction();
 

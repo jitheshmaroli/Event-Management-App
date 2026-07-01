@@ -14,6 +14,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { addMonths, format } from "date-fns";
 import { fromDateKey, toDateKey } from "@/utils/date";
+import { ROUTES } from "@/constants/routes";
 
 export default function ServiceView() {
   const { id } = useParams<{ id: string }>();
@@ -60,7 +61,7 @@ export default function ServiceView() {
     if (!id || !hasAttemptedFetch) return;
 
     if (!loading && currentService === null) {
-      navigate("/admin/services", { replace: true });
+      navigate(ROUTES.ADMIN.SERVICES, { replace: true });
     }
   }, [id, hasAttemptedFetch, loading, currentService, navigate]);
 
@@ -95,7 +96,7 @@ export default function ServiceView() {
     )
       return;
     dispatch(deleteService(currentService._id));
-    navigate("/admin/services");
+    navigate(ROUTES.ADMIN.SERVICES);
   };
 
   const getDayClass = (date: Date) => {

@@ -12,6 +12,8 @@ import { useAppDispatch } from "@/hooks/useAppDispatch";
 import { useAppSelector } from "@/hooks/useAppSelector";
 import { toDateKey } from "@/utils/date";
 import { resetServices } from "@/features/services/servicesSlice";
+import { ROUTES } from "@/constants/routes";
+import { getErrorMessage } from "@/lib/errorMessage";
 
 export default function BookingPage() {
   const { serviceId } = useParams<{ serviceId: string }>();
@@ -55,10 +57,9 @@ export default function BookingPage() {
         }),
       ).unwrap();
 
-      navigate("/bookings/summary", { state: { bookingData: result } });
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      showError(err.message || "Failed to create booking");
+      navigate(ROUTES.USER.BOOKING_SUMMARY, { state: { bookingData: result } });
+    } catch (error) {
+      showError(getErrorMessage(error));
     } finally {
       setIsCreating(false);
     }

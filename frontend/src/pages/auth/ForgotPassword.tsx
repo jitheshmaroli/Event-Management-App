@@ -6,6 +6,7 @@ import { useAppDispatch } from "@/hooks/useAppDispatch";
 import { clearError } from "@/features/auth/authSlice";
 import { useAppSelector } from "@/hooks/useAppSelector";
 import { sendOtpThunk } from "@/features/auth/authThunk";
+import { ROUTES } from "@/constants/routes";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -31,7 +32,7 @@ export default function ForgotPassword() {
     console.log(result);
 
     if (sendOtpThunk.fulfilled.match(result)) {
-      navigate("/verify-otp", {
+      navigate(ROUTES.VERIFY_OTP, {
         state: { email, purpose: OTP_PURPOSE.FORGOT_PASSWORD },
       });
     }
@@ -109,7 +110,8 @@ export default function ForgotPassword() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3.5 px-6 rounded-xl font-medium hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-60 transition-all transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3">
+                className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3.5 px-6 rounded-xl font-medium hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-60 transition-all transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3"
+              >
                 {isLoading ? (
                   <>
                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -124,7 +126,8 @@ export default function ForgotPassword() {
             <div className="mt-8 text-center">
               <Link
                 to="/login"
-                className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-indigo-700 transition-colors">
+                className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-indigo-700 transition-colors"
+              >
                 <ArrowLeft size={16} />
                 Back to login
               </Link>

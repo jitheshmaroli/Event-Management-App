@@ -115,7 +115,6 @@ export const serviceIdSchema = Joi.object({
 export const availabilityParamsSchema = Joi.object({
   serviceId: Joi.string().required().messages({
     'string.empty': 'Service ID is required',
-    'any.required': 'Service ID is required',
   }),
 });
 

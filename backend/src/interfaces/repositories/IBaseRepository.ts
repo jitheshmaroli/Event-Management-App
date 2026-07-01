@@ -1,10 +1,11 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   ClientSession,
   UpdateQuery,
   ProjectionType,
   QueryOptions,
   QueryFilter,
+  PopulateOptions,
+  SortOrder,
 } from 'mongoose';
 
 export interface IBaseRepository<T> {
@@ -20,9 +21,9 @@ export interface IBaseRepository<T> {
     options?: {
       skip?: number;
       limit?: number;
-      sort?: Record<string, 1 | -1 | string>;
-      populate?: any;
-      projection?: any;
+      sort?: Record<string, SortOrder> | string;
+      populate?: PopulateOptions | (string | PopulateOptions)[];
+      projection?: ProjectionType<T>;
       session?: ClientSession;
     }
   ): Promise<T[]>;

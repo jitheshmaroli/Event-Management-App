@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { inject, injectable } from 'inversify';
 import { TYPES } from '@/inversify/types';
 import { IAdminService } from '@/interfaces/services/IAdminService';
@@ -8,9 +7,11 @@ import { IBookingRepository } from '@/interfaces/repositories/IBookingRepository
 import {
   AdminDashboardResponse,
   PaginatedResponse,
+  PopulatedBooking,
 } from '@/dtos/admin/admin.dto';
 import { BookingStatus, IBooking } from '@/models/Booking';
 import { IUser } from '@/models/User';
+import { QueryFilter } from 'mongoose';
 
 @injectable()
 export class AdminService implements IAdminService {
@@ -36,7 +37,7 @@ export class AdminService implements IAdminService {
               { path: 'service', select: 'title pricePerDay' },
             ],
           }
-        ),
+        ) as unknown as Promise<PopulatedBooking[]>,
       ]);
 
     return {
@@ -46,10 +47,10 @@ export class AdminService implements IAdminService {
         totalBookings: bookingStats.totalConfirmed,
         totalRevenue: bookingStats.totalRevenue || 0,
       },
-      recentBookings: recentBookings.map((b) => ({
+      recentBookings: (recentBookings as PopulatedBooking[]).map((b) => ({
         _id: b._id.toString(),
-        user: b.user as any,
-        service: b.service as any,
+        user: b.user,
+        service: b.service,
         startDate: b.startDate,
         endDate: b.endDate,
         totalAmount: b.totalAmount,
@@ -64,7 +65,7 @@ export class AdminService implements IAdminService {
     limit: number,
     search?: string
   ): Promise<PaginatedResponse<IUser>> {
-    const filter: any = {};
+    const filter: QueryFilter<IUser> = {};
     if (search?.trim()) {
       filter.$or = [
         { name: { $regex: search.trim(), $options: 'i' } },
@@ -100,7 +101,7 @@ export class AdminService implements IAdminService {
     limit: number,
     status?: string
   ): Promise<PaginatedResponse<IBooking>> {
-    const filter: any = {};
+    const filter: QueryFilter<IBooking> = {};
     if (status) filter.status = status;
 
     const skip = (page - 1) * limit;

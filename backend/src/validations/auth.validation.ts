@@ -10,6 +10,7 @@ export const registerSchema = Joi.object({
     .email({ tlds: { allow: false } })
     .required(),
   password: Joi.string()
+    .empty('')
     .min(8)
     .max(64)
     .pattern(
@@ -21,7 +22,7 @@ export const registerSchema = Joi.object({
       'string.max': 'Password must not exceed 64 characters',
       'string.pattern.base':
         'Password must include at least one uppercase letter, one lowercase letter, one number, and one special character',
-      'any.required': 'Password is required',
+      'string.empty': 'Password is required',
     }),
   phone: Joi.string()
     .pattern(/^[6-9]\d{9}$/)
@@ -41,6 +42,7 @@ export const loginSchema = Joi.object({
 export const resetPasswordSchema = Joi.object({
   email: Joi.string().email().required(),
   newPassword: Joi.string()
+    .empty('')
     .min(8)
     .max(64)
     .pattern(
@@ -52,7 +54,7 @@ export const resetPasswordSchema = Joi.object({
       'string.max': 'Password must not exceed 64 characters',
       'string.pattern.base':
         'Password must include at least one uppercase letter, one lowercase letter, one number, and one special character',
-      'any.required': 'Password is required',
+      'string.empty': 'Password is required',
     }),
 });
 

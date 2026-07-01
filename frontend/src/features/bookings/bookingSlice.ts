@@ -1,14 +1,11 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { createSlice } from "@reduxjs/toolkit";
-import { createBooking, verifyPayment, cancelBooking, fetchUserBookings } from "./bookingThunks";
-import type { Booking } from "@/types/booking.types";
-
-interface BookingState {
-  currentBooking: { booking: Booking; order: any } | null;
-  bookings: Booking[];
-  loading: boolean;
-  error: string | null;
-}
+import {
+  createBooking,
+  verifyPayment,
+  cancelBooking,
+  fetchUserBookings,
+} from "./bookingThunks";
+import type { BookingState } from "@/types/booking.types";
 
 const initialState: BookingState = {
   currentBooking: null,
@@ -28,7 +25,9 @@ const bookingSlice = createSlice({
   extraReducers: (builder) => {
     // create
     builder
-      .addCase(createBooking.pending, (state) => { state.loading = true; })
+      .addCase(createBooking.pending, (state) => {
+        state.loading = true;
+      })
       .addCase(createBooking.fulfilled, (state, action) => {
         state.loading = false;
         state.currentBooking = action.payload;
@@ -39,23 +38,20 @@ const bookingSlice = createSlice({
       });
 
     // verify
-    builder
-      .addCase(verifyPayment.fulfilled, (state, action) => {
-        state.currentBooking!.booking = action.payload;
-      });
+    builder.addCase(verifyPayment.fulfilled, (state, action) => {
+      state.currentBooking!.booking = action.payload;
+    });
 
     // fetch
-    builder
-      .addCase(fetchUserBookings.fulfilled, (state, action) => {
-        state.bookings = action.payload;
-      });
+    builder.addCase(fetchUserBookings.fulfilled, (state, action) => {
+      state.bookings = action.payload;
+    });
 
     // cancel
-    builder
-      .addCase(cancelBooking.fulfilled, (state, action) => {
-        const idx = state.bookings.findIndex(b => b._id === action.payload._id);
-        if (idx !== -1) state.bookings[idx] = action.payload;
-      });
+    builder.addCase(cancelBooking.fulfilled, (state, action) => {
+      const idx = state.bookings.findIndex((b) => b._id === action.payload._id);
+      if (idx !== -1) state.bookings[idx] = action.payload;
+    });
   },
 });
 

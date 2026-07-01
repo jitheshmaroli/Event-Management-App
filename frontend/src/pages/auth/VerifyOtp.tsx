@@ -15,6 +15,7 @@ import { clearError } from "@/features/auth/authSlice";
 import { useAppSelector } from "@/hooks/useAppSelector";
 import { useAppDispatch } from "@/hooks/useAppDispatch";
 import { sendOtpThunk, verifyOtpThunk } from "@/features/auth/authThunk";
+import { ROUTES } from "@/constants/routes";
 
 export default function VerifyOtp() {
   const [otp, setOtp] = useState<string[]>(Array(6).fill(""));
@@ -133,7 +134,10 @@ export default function VerifyOtp() {
         if (otpPurpose === OTP_PURPOSE.SIGNUP) {
           setSuccessMessage("Email verified! Redirecting to bookings...");
 
-          setTimeout(() => navigate("/my-bookings", { replace: true }), 1500);
+          setTimeout(
+            () => navigate(ROUTES.USER.MY_BOOKINGS, { replace: true }),
+            1500,
+          );
         } else if (otpPurpose === OTP_PURPOSE.FORGOT_PASSWORD) {
           const message =
             payload.purpose === OTP_PURPOSE.FORGOT_PASSWORD
